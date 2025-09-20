@@ -1,0 +1,860 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>カード使用額トラッカー v9.1（定例は平日調整なし／先読み＆重複防止適用／カード追加修正）</title>
+<style>
+  :root { --bg:#eff6ff; --card:#fff; --border:#dbeafe; --accent:#0ea5e9; --accent2:#0369a1; --muted:#6b7280; --text:#0f172a; --warn:#f43f5e; --ok:#10b981; --warn2:#f59e0b; }
+  *{box-sizing:border-box}
+  body{margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans JP",sans-serif; background:var(--bg); color:var(--text)}
+  .wrap{max-width:720px; margin:0 auto; padding:16px; padding-bottom:110px;}
+  .row{display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap}
+  .card{background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px; box-shadow:0 1px 6px rgba(0,0,0,.05); margin-bottom:16px}
+  h1{font-size:18px; margin:0 0 2px} .sub{font-size:12px; color:var(--muted)}
+  label{font-size:12px; color:var(--muted); display:block; margin-bottom:4px}
+  input,select,textarea{width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:12px; font-size:16px; outline:none}
+  textarea{min-height:84px}
+  input:focus,select:focus,textarea:focus{border-color:#93c5fd; box-shadow:0 0 0 3px #bfdbfe}
+  .btn{height:42px; padding:0 14px; border-radius:12px; border:1px solid var(--border); background:var(--accent); color:#fff; font-weight:600; cursor:pointer}
+  .btn.ghost{background:#fff; color:var(--text)}
+  .bar{height:8px; width:100%; background:#e0f2fe; border-radius:999px; overflow:hidden}
+  .bar>div{height:100%; background:var(--accent); transition:width .2s}
+  ul{list-style:none; padding:0; margin:0}
+  li{display:flex; align-items:center; gap:12px; padding:12px; border-top:1px solid #eef2ff}
+  .date{width:88px; font-size:12px; color:var(--muted)}
+  .amt{font-weight:700}
+  .chip{margin-left:6px; font-size:10px; background:#fde68a; color:#92400e; padding:2px 6px; border-radius:999px}
+  .status{font-size:12px; color:var(--muted)}
+  .footer{position:fixed; left:0; right:0; bottom:12px; z-index:20}
+  .footer>div{max-width:720px; margin:0 auto; display:flex; align-items:center; gap:12px; background:#fff; border:1px solid var(--border); border-radius:16px; padding:12px; box-shadow:0 1px 8px rgba(0,0,0,.06)}
+  .hidden{display:none}
+  .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.15); padding:16px; z-index:30}
+  .modal.show{display:flex}
+  .modal>.panel{background:#fff; border:1px solid var(--border); border-radius:16px; width:min(680px,100%); max-height:90vh; overflow:auto; padding:16px; box-shadow:0 10px 30px rgba(0,0,0,.2)}
+  .row-mid{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+
+  .payday-counter{display:grid; gap:8px}
+  .payday-eta{font-size:20px; font-weight:800}
+  .payday-eta.ok{color:var(--ok)}
+  .badges{display:flex; gap:8px; flex-wrap:wrap}
+  .badge{padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid var(--border); background:#fff}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <header class="row" style="align-items:center; margin-bottom:12px">
+      <div>
+        <h1>カード使用額トラッカー（複数カード）</h1>
+        <div class="sub">給料日は休日なら前営業日に繰上げ／定例は平日調整なし／テンプレは前後月にも自動適用（重複防止）</div>
+      </div>
+    </header>
+
+    <!-- payday counter -->
+    <section class="card" id="paydayCounterCard">
+      <h2 style="font-size:14px; margin:0 0 8px">給料日までのカウント</h2>
+      <div class="payday-counter">
+        <div class="sub">ベース給料日（土日/祝日は前営業日に繰上げ）</div>
+        <div id="pdEta" class="payday-eta">—</div>
+        <div class="bar"><div id="pdBar" style="width:0%"></div></div>
+        <div id="pdRange" class="sub">—</div>
+        <div class="badges">
+          <span id="pdBadgeBase" class="badge">ベース: —日</span>
+          <span id="pdBadgePrev" class="badge">前回: —</span>
+          <span id="pdBadgeThis" class="badge">今回: —</span>
+          <span id="pdBadgeDays" class="badge">全: —日</span>
+          <span id="pdBadgePct" class="badge">進捗: —%</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- month & total -->
+    <section class="card">
+      <div class="row" style="align-items:flex-end">
+        <div style="flex:1 1 200px">
+          <label>月（アンカー：次の給料日の“終わり月”）</label>
+          <input id="month" type="month">
+          <div id="periodRange" class="sub" style="margin-top:4px">—</div>
+        </div>
+        <div class="row" style="flex:0 0 auto; align-items:center">
+          <button id="prevMonth" class="btn ghost" type="button">◀ 前月</button>
+          <button id="nextMonth" class="btn ghost" type="button">翌月 ▶</button>
+        </div>
+        <button id="manageCards" class="btn" type="button">カード管理</button>
+        <button id="manageTemplates" class="btn" type="button">定例支出</button>
+        <button id="openSettings" class="btn ghost" type="button">設定</button>
+      </div>
+      <div style="margin-top:12px">
+        <div style="display:flex; justify-content:space-between; font-size:14px"><span class="sub">合計使用額</span><b id="usedTotal">¥0</b></div>
+        <div class="bar"><div id="barTotal" style="width:0%"></div></div>
+        <div style="display:flex; justify-content:space-between; font-size:14px; margin-top:2px"><span class="sub">合計残り枠（目標合計）</span><b id="remainTotal">目標未設定</b></div>
+        <div class="sub" style="margin-top:4px">※ 合計目標＝各カードの目標の合計</div>
+      </div>
+    </section>
+
+    <section id="cardsSummary" class="mb-2"></section>
+
+    <!-- add/edit form -->
+    <section class="card">
+      <h2 style="font-size:14px; margin:0 0 8px">支出を追加 / 編集</h2>
+      <div class="row">
+        <div style="flex:1 1 180px"><label>カード</label><select id="cardSelect"></select></div>
+        <div style="flex:1 1 160px"><label>日付</label><input id="date" type="date"></div>
+        <div style="flex:1 1 140px"><label>金額 (円)</label><input id="amount" inputmode="numeric" placeholder="例: 1200 / １２００ / ￥1,200"></div>
+        <div style="flex:1 1 100%"><label>メモ</label><input id="memo" type="text"></div>
+        <div style="flex:1 1 100%; font-size:12px; color:var(--muted)"><label><input id="estimated" type="checkbox"> 概算</label></div>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button id="add" class="btn" type="button" style="flex:1">追加</button>
+        <button id="update" class="btn hidden" type="button" style="flex:1">更新</button>
+        <button id="cancelEdit" class="btn ghost hidden" type="button">編集をやめる</button>
+        <button id="clearForm" class="btn ghost" type="button">クリア</button>
+      </div>
+    </section>
+
+    <!-- list -->
+    <section class="card" id="listSection">
+      <div class="row" style="align-items:center">
+        <h2 style="font-size:14px; margin:0">今月の明細</h2>
+        <select id="filterCard" style="margin-left:auto; width:auto"><option value="">（すべてのカード）</option></select>
+        <button id="exportCsv" class="btn ghost" type="button" style="font-size:12px">CSV書出</button>
+        <button id="backup" class="btn ghost" type="button" style="font-size:12px">バックアップ</button>
+        <label class="btn ghost" style="font-size:12px; display:inline-flex; align-items:center; gap:6px; cursor:pointer">復元
+          <input id="restore" type="file" accept="application/json" style="display:none">
+        </label>
+      </div>
+      <ul id="list"></ul>
+    </section>
+
+    <nav class="footer">
+      <div>
+        <button id="gotoToday" class="btn" type="button" style="background:var(--accent2)">今月へ</button>
+        <div class="sub">合計 <b id="sumFooter">¥0</b></div>
+        <div class="sub" id="status" style="margin-left:auto">—</div>
+      </div>
+    </nav>
+
+    <section class="card">
+      <h2 style="font-size:14px;margin:0 0 8px">クラウド同期（ログインが必要）</h2>
+      <div id="authArea">
+        <input id="sEmail" type="email" placeholder="メール">
+        <input id="sPw" type="password" placeholder="パスワード">
+        <button id="sSignup" class="btn" type="button">新規登録</button>
+        <button id="sLogin" class="btn" type="button">ログイン</button>
+      </div>
+      <div id="syncArea" class="row" style="display:none">
+        <div class="sub">ログイン中：<b id="sWho"></b></div>
+        <button id="cloudSave" class="btn" type="button">クラウド保存</button>
+        <button id="cloudLoad" class="btn ghost" type="button">クラウド読込</button>
+        <button id="sLogout" class="btn ghost" type="button">ログアウト</button>
+      </div>
+      <div id="syncMsg" class="sub"></div>
+    </section>
+
+  </main>
+
+  <!-- card modal -->
+  <div id="cardModal" class="modal">
+    <div class="panel">
+      <div class="row-mid">
+        <h3 style="margin:0">カード管理</h3>
+        <button id="closeCardModal" class="btn ghost" type="button" style="margin-left:auto; height:auto; padding:6px 10px">閉じる</button>
+      </div>
+      <div class="sub" style="margin-top:4px">カード名と月の目標額（枠）を編集・追加できます</div>
+      <ul id="cardList" class="mb-2" style="margin-top:8px"></ul>
+      <div class="row-mid" style="margin-top:6px">
+        <input id="newCardName" placeholder="カード名" style="flex:1 1 auto">
+        <input id="newCardTarget" placeholder="目標額" inputmode="numeric" style="width:160px">
+        <button id="addCard" class="btn" type="button">カード追加</button>
+      </div>
+      <div class="row-mid" style="margin-top:8px">
+        <button id="resetTargets" class="btn ghost" type="button">合計目標を均等配分</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- template modal -->
+  <div id="tplModal" class="modal">
+    <div class="panel">
+      <div class="row-mid">
+        <h3 style="margin:0">定例支出（毎月自動追加／平日調整なし）</h3>
+        <button id="closeTplModal" class="btn ghost" type="button" style="margin-left:auto; height:auto; padding:6px 10px">閉じる</button>
+      </div>
+      <div class="sub" style="margin-top:4px">指定した日付でそのまま登録します（休日でも移動しません）</div>
+      <ul id="tplList" style="margin-top:8px"></ul>
+      <div class="row-mid" style="margin-top:10px">
+        <select id="tplCard" style="min-width:140px"></select>
+        <input id="tplDay" inputmode="numeric" placeholder="日(1-31)" style="width:110px">
+        <input id="tplAmount" inputmode="numeric" placeholder="金額(円)" style="width:140px">
+        <input id="tplMemo" placeholder="メモ" style="flex:1 1 auto">
+        <label class="sub" style="display:flex; align-items:center; gap:6px"><input id="tplEst" type="checkbox">概算</label>
+        <button id="addTpl" class="btn" type="button">テンプレ追加</button>
+      </div>
+      <div class="row-mid" style="margin-top:10px">
+        <div class="sub" id="tplStatus"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- settings modal -->
+  <div id="settingsModal" class="modal">
+    <div class="panel">
+      <div class="row-mid">
+        <h3 style="margin:0">締日設定</h3>
+        <button id="closeSettings" class="btn ghost" type="button" style="margin-left:auto; height:auto; padding:6px 10px">閉じる</button>
+      </div>
+      <div class="row-mid" style="margin-top:8px">
+        <label class="sub" for="paydayInput">ベース給料日（1〜31）</label>
+        <input id="paydayInput" inputmode="numeric" placeholder="25 など" style="width:120px">
+        <div class="sub">給料日のみ休日なら前営業日に繰上げ。定例は移動しません。</div>
+      </div>
+      <div class="row-mid" style="margin-top:8px">
+        <label class="sub"><input id="adjWeekends" type="checkbox" checked> 土日を休業日として扱う（給料日のみ）</label>
+      </div>
+      <div class="row-mid" style="margin-top:8px; align-items:flex-start">
+        <div style="flex:1 1 100%">
+          <label class="sub" for="holidaysInput">追加の休業日（YYYY-MM-DD をカンマ or 改行で）</label>
+          <textarea id="holidaysInput" placeholder="2025-01-01, 2025-01-13&#10;2025-02-11 ..."></textarea>
+        </div>
+      </div>
+      <div class="row-mid" style="margin-top:10px">
+        <button id="saveSettings" class="btn" type="button">保存</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* utils */
+const $ = s=>document.querySelector(s);
+const fmtJPY = n=>'¥'+Number(n||0).toLocaleString('ja-JP');
+const pad2 = n=>String(n).padStart(2,'0');
+const yyyymm = d=>`${d.getFullYear()}-${pad2(d.getMonth()+1)}`;
+const ymd = d=>`${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+const todayStr = ()=> ymd(new Date());
+const toHalf = s => s.replace(/[！-～]/g, ch => String.fromCharCode(ch.charCodeAt(0)-0xFEE0));
+const toNumber = s => { if (s==null) return NaN; s = toHalf(String(s)).replace(/[^\d.\-]/g,''); if (s===''||s==='-'||s==='.'||s==='-.') return NaN; return Number(s); };
+const uuid = ()=> ('u_'+Date.now().toString(36)+Math.random().toString(36).slice(2));
+const clampDay = (y,m,day)=> { const last=new Date(y,m,0).getDate(); return Math.min(Math.max(1, day|0), last); };
+const isWeekend = d => d.getDay()===0 || d.getDay()===6;
+const startOfDay = d => { const x=new Date(d); x.setHours(0,0,0,0); return x; };
+const endOfDay   = d => { const x=new Date(d); x.setHours(23,59,59,999); return x; };
+const daysBetween = (a,b)=> Math.floor((startOfDay(b)-startOfDay(a))/86400000);
+
+/* storage keys */
+const KEYS = { CARDS:'cb_cards_local_v1', ENTRIES:'cb_entries_local_v1' };
+const KEYS_TPL = { LIST:'cb_templates_v1' }; // ← APPLIEDフラグは撤廃
+const KEY_PAYDAY = 'cb_payday_base_v1';
+const KEY_ADJ_WK = 'cb_adjust_weekends_v1';
+const KEY_HOLIDAYS = 'cb_holidays_v1';
+
+const load=(k,fb)=>{ try{ return JSON.parse(localStorage.getItem(k)) ?? fb }catch{ return fb } };
+const save=(k,v)=>{ try{ localStorage.setItem(k, JSON.stringify(v)); tick('保存しました'); }catch(e){ tick('保存失敗'); } };
+
+/* state */
+let cards = load(KEYS.CARDS, []);
+let entries = load(KEYS.ENTRIES, {});
+let templates = load(KEYS_TPL.LIST, []);
+let editingRef = null;
+let legacyCycle = load('cb_cycle_start_day_v1', null);
+let paydayBase = load(KEY_PAYDAY, legacyCycle!=null ? legacyCycle : 1);
+let adjustWeekends = load(KEY_ADJ_WK, true);
+let holidays = load(KEY_HOLIDAYS, []);
+
+/* elements */
+const monthEl=$('#month'), periodRangeEl=$('#periodRange');
+const usedTotalEl=$('#usedTotal'), remainTotalEl=$('#remainTotal'), barTotalEl=$('#barTotal');
+const cardsSummaryEl=$('#cardsSummary'), cardSelectEl=$('#cardSelect'), filterCardEl=$('#filterCard');
+const dateEl=$('#date'), amountEl=$('#amount'), memoEl=$('#memo'), estimatedEl=$('#estimated');
+const listEl=$('#list'), sumFooterEl=$('#sumFooter'), statusEl=$('#status');
+const addBtn=$('#add'), updateBtn=$('#update'), cancelEditBtn=$('#cancelEdit'), clearFormBtn=$('#clearForm');
+const exportCsvBtn=$('#exportCsv'), backupBtn=$('#backup'), restoreInput=$('#restore'), gotoTodayBtn=$('#gotoToday');
+
+const manageCardsBtn=$('#manageCards'), cardModal=$('#cardModal'), closeCardModalBtn=$('#closeCardModal');
+const cardListEl=$('#cardList'), newCardNameEl=$('#newCardName'), newCardTargetEl=$('#newCardTarget'), resetTargetsBtn=$('#resetTargets');
+
+const manageTemplatesBtn=$('#manageTemplates'), tplModal=$('#tplModal'), closeTplModalBtn=$('#closeTplModal');
+const tplListEl=$('#tplList'), tplCardEl=$('#tplCard'), tplDayEl=$('#tplDay'), tplAmountEl=$('#tplAmount'), tplMemoEl=$('#tplMemo'), tplEstEl=$('#tplEst');
+const tplStatusEl=$('#tplStatus');
+
+const settingsModal=$('#settingsModal'), openSettingsBtn=$('#openSettings'), closeSettingsBtn=$('#closeSettings');
+const paydayInput=$('#paydayInput'), adjWeekendsEl=$('#adjWeekends'), holidaysInput=$('#holidaysInput');
+const saveSettingsBtn=$('#saveSettings');
+
+/* payday counter elements */
+const pdEtaEl = $('#pdEta'), pdBarEl = $('#pdBar'), pdRangeEl = $('#pdRange');
+const pdBadgeBase = $('#pdBadgeBase'), pdBadgePrev = $('#pdBadgePrev'), pdBadgeThis = $('#pdBadgeThis'), pdBadgeDays = $('#pdBadgeDays'), pdBadgePct = $('#pdBadgePct');
+
+/* helpers */
+const tick = (m)=>{ statusEl.textContent=m; setTimeout(()=>statusEl.textContent='—',1200); };
+const ensureDefaultCard=()=>{ if(cards.length===0){ cards=[{id:uuid(),name:'メインカード',target:0}]; save(KEYS.CARDS,cards);} };
+const getMonthKey=()=> monthEl.value || yyyymm(new Date());
+const monthEntries=(key)=> entries[key] || [];
+const setMonthEntries=(key,arr)=>{ entries[key]=arr; save(KEYS.ENTRIES,entries); render(); };
+const totalTarget=()=> cards.reduce((s,c)=> s+(+c.target||0),0);
+
+/* business days and payday (templates are NOT adjusted) */
+function holidaySet(){ const set = new Set(); (holidays||[]).forEach(d=>{ if(typeof d==='string' && d.length>=10) set.add(d.slice(0,10)); }); return set; }
+function isHolidayDate(d, set){ return (adjustWeekends && isWeekend(d)) || set.has(ymd(d)); }
+function adjustedPayday(y, m){
+  const base = new Date(y, m-1, clampDay(y,m,paydayBase));
+  const set = holidaySet();
+  while(isHolidayDate(base, set)){ base.setDate(base.getDate()-1); }
+  return startOfDay(base);
+}
+
+/* period (end month anchored by next payday) */
+function periodOf(ym){
+  const [y,m]=ym.split('-').map(Number);
+  let py=y, pm=m-1; if(pm<1){ pm=12; py--; }
+  const start = adjustedPayday(py, pm);
+  const endExclusive = adjustedPayday(y, m);
+  const end = new Date(endExclusive.getTime()-86400000);
+  return {start, end, endExclusive};
+}
+function anchorForDate(d){
+  const y=d.getFullYear(), m=d.getMonth()+1;
+  const endExclusive = adjustedPayday(y, m);
+  if(startOfDay(d) >= endExclusive){
+    let nm=m+1, ny=y; if(nm>12){ nm=1; ny++; }
+    return `${ny}-${pad2(nm)}`;
+  }
+  return `${y}-${pad2(m)}`;
+}
+function updatePeriodLabel(){
+  const {start, end} = periodOf(getMonthKey());
+  const p2=n=>String(n).padStart(2,'0');
+  const f=d=>`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;
+  periodRangeEl.textContent = `期間: ${f(start)} 〜 ${f(end)}（ベース給料日: ${paydayBase}日／給料日は休業日なら前営業日に調整。定例は移動しません）`;
+}
+
+/* entries in period */
+function entriesForPeriod(ym){
+  const {start, end} = periodOf(ym);
+  const keys = new Set([ yyyymm(start), yyyymm(end) ]);
+  let rows = [];
+  keys.forEach(k=>{
+    (entries[k]||[]).forEach((r,idx)=>{
+      const d=new Date(r.date);
+      if(d>=start && d<=end) rows.push({...r, srcKey:k, srcIdx:idx});
+    });
+  });
+  rows.sort((a,b)=> (a.date||'').localeCompare(b.date||'') || (a.memo||'').localeCompare(b.memo||'')); 
+  return rows;
+}
+const sumByCardInPeriod=(ym,id)=> entriesForPeriod(ym).filter(r=>r.cardId===id).reduce((s,r)=>s+(+r.amount||0),0);
+const sumAllInPeriod=(ym)=> entriesForPeriod(ym).reduce((s,r)=>s+(+r.amount||0),0);
+
+/* templates (NO weekday adjustment) */
+function renderTplSelectorsFromCards(){ tplCardEl.innerHTML=''; cards.forEach(c=>{ const o=document.createElement('option'); o.value=c.id; o.textContent=c.name; tplCardEl.appendChild(o); }); }
+function renderTplList(){
+  tplListEl.innerHTML=''; templates.forEach(t=>{
+    const c = cards.find(x=>x.id===t.cardId);
+    const li=document.createElement('li');
+    li.style.cssText='padding:8px 0; border-top:1px solid #eef2ff; display:flex; gap:8px; align-items:center; flex-wrap:wrap;';
+    li.innerHTML = `<div class="sub">[${c?c.name:'—'}] 毎月${t.day}日 / ${fmtJPY(t.amount)} / ${t.memo||''} ${t.est?'<span class="chip">概算</span>':''}</div>
+                    <button data-del-tpl="${t.id}" class="btn ghost" type="button" style="height:auto; padding:6px 10px; font-size:12px">削除</button>`;
+    tplListEl.appendChild(li);
+  });
+}
+function dateInPeriodForTpl(ym, day){
+  const {start, end} = periodOf(ym);
+  const ay=end.getFullYear(), am=end.getMonth()+1;
+  const candA = new Date(ay, am-1, clampDay(ay, am, day));
+  if(candA>=start && candA<=end) return candA;
+  const sy=start.getFullYear(), sm=start.getMonth()+1;
+  const candS = new Date(sy, sm-1, clampDay(sy, sm, day));
+  if(candS>=start && candS<=end) return candS;
+  return end;
+}
+
+/* ★ 重要：毎回適用（重複はexistsで防止）＝APPLIEDフラグ撤廃 ★ */
+function applyTemplatesForMonth(ym){
+  const periodRows = entriesForPeriod(ym);
+  let added=0;
+  templates.forEach(t=>{
+    const target = dateInPeriodForTpl(ym, t.day); // no adjustment
+    const dateStr = ymd(target);
+    const exists = periodRows.some(r=> r.cardId===t.cardId && r.date===dateStr && +r.amount===+t.amount && (r.memo||'')===(t.memo||'') && !!r.est===!!t.est);
+    if(!exists){
+      const key = dateStr.slice(0,7);
+      const arr = monthEntries(key).slice();
+      arr.push({ cardId:t.cardId, date:dateStr, amount:+t.amount, memo:t.memo||'', est:!!t.est });
+      entries[key]=arr;
+      added++;
+    }
+  });
+  if(added>0){ save(KEYS.ENTRIES, entries); render(); }
+  return added;
+}
+
+/* 先読み（前月・当月・翌月に適用を試みる） */
+function ymAdd(ym, delta){
+  const d = new Date(ym + '-01');
+  d.setMonth(d.getMonth() + delta);
+  return yyyymm(d);
+}
+function preapplyNeighbors(ym){
+  [ymAdd(ym,-1), ym, ymAdd(ym,1)].forEach(k => applyTemplatesForMonth(k));
+}
+
+/* payday counter */
+function currentPayPeriodForCounter(today=new Date()){
+  const y=today.getFullYear(), m=today.getMonth()+1;
+  const thisPay = adjustedPayday(y, m);
+  if(endOfDay(today) > endOfDay(thisPay)){
+    const nm = m===12?1:m+1, ny = m===12?y+1:y;
+    return { prevPay: thisPay, thisPay: adjustedPayday(ny, nm) };
+  }else{
+    const pm = m===1?12:m-1, py = m===1?y-1:y;
+    return { prevPay: adjustedPayday(py, pm), thisPay };
+  }
+}
+function renderPaydayCounter(){
+  const { prevPay, thisPay } = currentPayPeriodForCounter(new Date());
+  const totalDays = Math.max(1, daysBetween(prevPay, thisPay));
+  const elapsed = Math.max(0, Math.min(totalDays, daysBetween(prevPay, new Date())));
+  const remaining = Math.max(0, totalDays - elapsed);
+  const pct = Math.round((elapsed/totalDays)*100);
+  const isToday = ymd(new Date()) === ymd(thisPay);
+
+  pdEtaEl.textContent = isToday ? '本日が給料日です！' : 'あと ' + remaining + ' 日';
+  pdEtaEl.classList.toggle('ok', isToday);
+  pdBarEl.style.width = pct + '%';
+  pdBarEl.style.background = remaining<=3 ? (remaining===0?'var(--ok)':'var(--warn2)') : 'var(--accent)';
+
+  const f = d => d.getFullYear() + '/' + (d.getMonth()+1) + '/' + d.getDate();
+  pdRangeEl.textContent = '期間：' + f(prevPay) + ' 〜 ' + f(thisPay) + '（全' + totalDays + '日・進捗' + pct + '%）';
+
+  pdBadgeBase.textContent = 'ベース: ' + paydayBase + '日';
+  pdBadgePrev.textContent = '前回: ' + f(prevPay);
+  pdBadgeThis.textContent = '今回: ' + f(thisPay);
+  pdBadgeDays.textContent = '全: ' + totalDays + '日';
+  pdBadgePct.textContent = '進捗: ' + pct + '%';
+}
+
+/* render */
+function renderCardsSummary(){
+  const ym = getMonthKey(); cardsSummaryEl.innerHTML='';
+  cards.forEach(c=>{
+    const used = sumByCardInPeriod(ym, c.id);
+    const tgt = +c.target||0;
+    const remain = Math.max(tgt-used,0);
+    const pct = tgt>0 ? Math.min(Math.round(used/tgt*100),100) : 0;
+    const d=document.createElement('div'); d.className='card';
+    d.innerHTML=`
+      <div class="row" style="align-items:center">
+        <div style="font-weight:600">${c.name}</div>
+        <span class="sub" style="margin-left:auto">目標: <b>${fmtJPY(tgt)}</b> / 使用: <b>${fmtJPY(used)}</b> / 残り: <b>${tgt?fmtJPY(remain):'目標未設定'}</b></span>
+        <button data-edit-card="${c.id}" class="btn ghost" type="button" style="height:auto; padding:6px 10px; font-size:12px">編集</button>
+        <button data-del-card="${c.id}" class="btn ghost" type="button" style="height:auto; padding:6px 10px; font-size:12px">削除</button>
+      </div>
+      <div class="bar" style="margin-top:8px"><div style="width:${pct}%; background:${used>tgt?'var(--warn)':'var(--accent)'}"></div></div>`;
+    cardsSummaryEl.appendChild(d);
+  });
+}
+function renderTopSummary(){
+  const ym = getMonthKey();
+  const used = sumAllInPeriod(ym);
+  const tgt = totalTarget();
+  usedTotalEl.textContent = fmtJPY(used);
+  sumFooterEl.textContent = fmtJPY(used);
+  if(tgt>0){
+    const remain = Math.max(tgt-used,0);
+    remainTotalEl.textContent = fmtJPY(remain);
+    const pct = Math.min(Math.round(used/tgt*100),100);
+    barTotalEl.style.width = pct+'%';
+    barTotalEl.style.background = (used>tgt?'var(--warn)':'var(--accent)');
+  }else{
+    remainTotalEl.textContent = '目標未設定';
+    barTotalEl.style.width='0%'; barTotalEl.style.background='var(--accent)';
+  }
+  updatePeriodLabel();
+}
+function renderCardSelectors(){
+  cardSelectEl.innerHTML=''; cards.forEach(c=>{ const o=document.createElement('option'); o.value=c.id; o.textContent=c.name; cardSelectEl.appendChild(o); });
+  const cur=filterCardEl.value; filterCardEl.innerHTML='<option value="">（すべてのカード）</option>';
+  cards.forEach(c=>{ const o=document.createElement('option'); o.value=c.id; o.textContent=c.name; filterCardEl.appendChild(o); });
+  if(cur && cards.some(c=>c.id===cur)) filterCardEl.value=cur;
+}
+function renderList(){
+  const ym = getMonthKey();
+  const filter = filterCardEl.value;
+  const rows = entriesForPeriod(ym).filter(r=>!filter || r.cardId===filter);
+  listEl.innerHTML='';
+  rows.forEach(r=>{
+    const card=cards.find(c=>c.id===r.cardId); const badge=r.est?'<span class="chip">概算</span>':'';
+    const li=document.createElement('li');
+    li.innerHTML=`<div class="date">${r.date||''}</div>
+      <div class="amt">${fmtJPY(r.amount||0)} ${badge}</div>
+      <div style="font-size:12px; color:var(--muted); flex:1">カード: ${card?card.name:'—'} ／ ${r.memo||''}</div>
+      <div style="display:flex; gap:6px">
+        <button data-edit='${r.srcKey}:${r.srcIdx}' class="btn ghost" type="button" style="height:auto; padding:6px 10px; font-size:12px">編集</button>
+        <button data-del='${r.srcKey}:${r.srcIdx}' class="btn ghost" type="button" style="height:auto; padding:6px 10px; font-size:12px">削除</button>
+      </div>`;
+    listEl.appendChild(li);
+  });
+}
+function render(){
+  ensureDefaultCard();
+  renderTopSummary(); renderCardsSummary(); renderCardSelectors(); renderList();
+  renderPaydayCounter();
+  addBtn.classList.remove('hidden'); updateBtn.classList.add('hidden'); cancelEditBtn.classList.add('hidden');
+}
+
+/* init */
+(function init(){
+  if(legacyCycle!=null){ try{ localStorage.removeItem('cb_cycle_start_day_v1'); }catch{} }
+  monthEl.value = anchorForDate(new Date());
+  dateEl.value = todayStr();
+  ensureDefaultCard();
+  applyTemplatesForMonth(getMonthKey()); // ← フラグなし毎回
+  render();
+  preapplyNeighbors(getMonthKey());      // ← 前月・翌月にも適用
+  setInterval(()=> renderPaydayCounter(), 3600*1000);
+})();
+
+/* events: month nav */
+monthEl.addEventListener('change', ()=>{
+  editingRef=null;
+  applyTemplatesForMonth(getMonthKey());
+  preapplyNeighbors(getMonthKey());
+  render();
+});
+filterCardEl.addEventListener('change', ()=> render());
+$('#prevMonth').addEventListener('click', ()=>{
+  const d = new Date((getMonthKey()) + "-01"); d.setMonth(d.getMonth()-1);
+  monthEl.value = yyyymm(d);
+  applyTemplatesForMonth(getMonthKey());
+  preapplyNeighbors(getMonthKey());
+  render();
+});
+$('#nextMonth').addEventListener('click', ()=>{
+  const d = new Date((getMonthKey()) + "-01"); d.setMonth(d.getMonth()+1);
+  monthEl.value = yyyymm(d);
+  applyTemplatesForMonth(getMonthKey());
+  preapplyNeighbors(getMonthKey());
+  render();
+});
+gotoTodayBtn.addEventListener('click', ()=>{
+  monthEl.value=anchorForDate(new Date());
+  applyTemplatesForMonth(getMonthKey());
+  preapplyNeighbors(getMonthKey());
+  render();
+});
+
+/* cards summary edit/delete (event delegation) */
+cardsSummaryEl.addEventListener('click', function(e) {
+  var editBtn = e.target.closest('button[data-edit-card]');
+  var delBtn  = e.target.closest('button[data-del-card]');
+
+  if (editBtn) {
+    var id = editBtn.dataset.editCard;
+    renderCardModal();
+    cardModal.classList.add('show');
+    setTimeout(function(){
+      var nameInput = cardListEl.querySelector('input[data-card-name="' + id + '"]');
+      if (nameInput) { nameInput.focus(); nameInput.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+    }, 0);
+    return;
+  }
+
+  if (delBtn) {
+    var id2 = delBtn.dataset.delCard;
+    var card = cards.find(function(c){ return c.id === id2; });
+    if (!card) return;
+    if (!confirm('カード「' + card.name + '」を削除しますか？\n※明細は残ります（カードのみ削除）')) return;
+
+    cards = cards.filter(function(c){ return c.id !== id2; });
+    save(KEYS.CARDS, cards);
+
+    if (!cards.some(function(c){ return c.id === (cardSelectEl.value || ''); })) {
+      if (cards[0]) cardSelectEl.value = cards[0].id;
+    }
+    render();
+    tick('カードを削除しました');
+  }
+});
+
+/* add entry */
+addBtn.addEventListener('click', ()=>{
+  const cardId = cardSelectEl.value || (cards[0]&&cards[0].id);
+  let d = dateEl.value || todayStr();
+  const a = toNumber((amountEl.value||'').trim());
+  const me = (memoEl.value||'').trim();
+  const est = !!estimatedEl.checked;
+  if(!cardId){ tick('カードがありません'); return; }
+  if(!Number.isFinite(a) || a<=0){ tick('金額を数値で'); return; }
+  const key = d.slice(0,7);
+  const rows = monthEntries(key).slice();
+  rows.push({ cardId, date:d, amount:a, memo:me, est });
+  setMonthEntries(key, rows);
+  amountEl.value=''; memoEl.value=''; estimatedEl.checked=false;
+});
+
+/* list edit/delete */
+listEl.addEventListener('click', (e)=>{
+  const editBtn=e.target.closest('button[data-edit]'); const delBtn=e.target.closest('button[data-del]');
+  if(editBtn){
+    const [srcKey, srcIdx] = editBtn.dataset.edit.split(':');
+    const rows = monthEntries(srcKey);
+    const r = rows[+srcIdx]; if(!r) return;
+    editingRef = {srcKey, srcIdx:+srcIdx};
+    cardSelectEl.value = r.cardId;
+    dateEl.value = r.date || todayStr();
+    amountEl.value = r.amount || '';
+    memoEl.value = r.memo || '';
+    estimatedEl.checked = !!r.est;
+    addBtn.classList.add('hidden'); updateBtn.classList.remove('hidden'); cancelEditBtn.classList.remove('hidden');
+    return;
+  }
+  if(delBtn){
+    const [srcKey, srcIdx] = delBtn.dataset.del.split(':');
+    const rows = monthEntries(srcKey).slice();
+    rows.splice(+srcIdx,1);
+    setMonthEntries(srcKey, rows);
+  }
+});
+updateBtn.addEventListener('click', ()=>{
+  if(!editingRef) return;
+  const oldKey = editingRef.srcKey, oldIdx = editingRef.srcIdx;
+  const rowsOld = monthEntries(oldKey).slice();
+  if(!rowsOld[oldIdx]) return;
+
+  const cardId = cardSelectEl.value || (cards[0]&&cards[0].id);
+  let d = dateEl.value || todayStr();
+  const a = toNumber((amountEl.value||'').trim());
+  const me = (memoEl.value||'').trim();
+  const est = !!estimatedEl.checked;
+  if(!Number.isFinite(a) || a<=0){ tick('金額を数値で'); return; }
+
+  const newRow = { cardId, date:d, amount:a, memo:me, est };
+  const newKey = d.slice(0,7);
+  if(newKey === oldKey){
+    rowsOld[oldIdx] = newRow; setMonthEntries(oldKey, rowsOld);
+  }else{
+    rowsOld.splice(oldIdx,1); setMonthEntries(oldKey, rowsOld);
+    const rowsNew = monthEntries(newKey).slice(); rowsNew.push(newRow); setMonthEntries(newKey, rowsNew);
+  }
+  editingRef=null; amountEl.value=''; memoEl.value=''; estimatedEl.checked=false;
+  addBtn.classList.remove('hidden'); updateBtn.classList.add('hidden'); cancelEditBtn.classList.add('hidden');
+});
+cancelEditBtn.addEventListener('click', ()=>{ editingRef=null; amountEl.value=''; memoEl.value=''; estimatedEl.checked=false; dateEl.value=todayStr(); addBtn.classList.remove('hidden'); updateBtn.classList.add('hidden'); cancelEditBtn.classList.add('hidden'); });
+clearFormBtn.addEventListener('click', ()=>{ amountEl.value=''; memoEl.value=''; estimatedEl.checked=false; if(!dateEl.value) dateEl.value=todayStr(); });
+
+/* csv/backup/restore */
+exportCsvBtn.addEventListener('click', ()=>{
+  const ym = getMonthKey();
+  const rows = entriesForPeriod(ym);
+  const csv = ['date,card,amount,memo,estimated'].concat(rows.map(r=>{
+    const c=cards.find(x=>x.id===r.cardId); const memo=(r.memo||'').replaceAll('"','""');
+    return `${r.date},"${c?c.name:''}",${r.amount},"${memo}",${r.est?1:0}`;
+  })).join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`${ym}-payday${paydayBase}.csv`; a.click(); URL.revokeObjectURL(a.href);
+});
+backupBtn.addEventListener('click', ()=>{
+  const data={cards,entries,templates, paydayBase, adjustWeekends, holidays};
+  const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`cardBudget-backup-${Date.now()}.json`; a.click(); URL.revokeObjectURL(a.href);
+});
+restoreInput.addEventListener('change', (e)=>{
+  const f=e.target.files?.[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{ try{
+    const o=JSON.parse(r.result);
+    if(o && typeof o==='object'){
+      if(Array.isArray(o.cards)) cards=o.cards;
+      if(o.entries && typeof o.entries==='object') entries=o.entries;
+      if(Array.isArray(o.templates)) templates=o.templates;
+      if(typeof o.paydayBase==='number') paydayBase = Math.min(Math.max(1, o.paydayBase|0), 31);
+      if(typeof o.adjustWeekends==='boolean') adjustWeekends = o.adjustWeekends;
+      if(Array.isArray(o.holidays)) holidays = o.holidays.filter(s=>typeof s==='string');
+      save(KEYS.CARDS,cards); save(KEYS.ENTRIES,entries); save(KEYS_TPL.LIST,templates);
+      save(KEY_PAYDAY, paydayBase); save(KEY_ADJ_WK, adjustWeekends); save(KEY_HOLIDAYS, holidays);
+      render();
+    }
+  }catch{ tick('復元に失敗'); } };
+  r.readAsText(f);
+});
+
+/* card modal */
+function renderCardModal(){
+  cardListEl.innerHTML=''; const ym=getMonthKey();
+  cards.forEach(c=>{
+    const li=document.createElement('li'); li.style.cssText='padding:8px 0; display:flex; gap:8px; align-items:center;';
+    li.innerHTML=`<input data-card-name="${c.id}" style="flex:1 1 auto; padding:8px 10px; border:1px solid var(--border); border-radius:10px" value="${c.name}">
+      <input data-card-target="${c.id}" style="width:140px; padding:8px 10px; border:1px solid var(--border); border-radius:10px" value="${c.target}" inputmode="numeric">
+      <span class="sub">使用: ${fmtJPY(sumByCardInPeriod(ym,c.id))}</span>`;
+    cardListEl.appendChild(li);
+  });
+}
+manageCardsBtn.addEventListener('click', ()=>{ renderCardModal(); cardModal.classList.add('show'); });
+closeCardModalBtn.addEventListener('click', ()=> cardModal.classList.remove('show'));
+cardModal.addEventListener('click', (e)=>{ if(e.target===cardModal) cardModal.classList.remove('show'); });
+cardListEl.addEventListener('input', (e)=>{
+  const nameEl=e.target.closest('input[data-card-name]'); const tgtEl=e.target.closest('input[data-card-target]');
+  if(nameEl){ const id=nameEl.dataset.cardName; const c=cards.find(x=>x.id===id); if(!c) return; c.name=nameEl.value; save(KEYS.CARDS,cards); renderCardSelectors(); renderCardsSummary(); renderList(); }
+  else if(tgtEl){ const id=tgtEl.dataset.cardTarget; const c=cards.find(x=>x.id===id); if(!c) return; c.target=toNumber(tgtEl.value); save(KEYS.CARDS,cards); renderTopSummary(); renderCardsSummary(); }
+});
+
+/* add card */
+$('#addCard').addEventListener('click', function () {
+  const name = (newCardNameEl.value || '').trim();
+  const tgt  = toNumber(newCardTargetEl.value || '');
+  if (!name) { tick('カード名を入れてください'); return; }
+  if (!Number.isFinite(tgt) || tgt < 0) { tick('目標額は0以上の数値で'); return; }
+
+  const id = uuid();
+  cards.push({ id, name, target: +tgt });
+  save(KEYS.CARDS, cards);
+
+  newCardNameEl.value = '';
+  newCardTargetEl.value = '';
+
+  renderCardModal();
+  renderCardSelectors();
+  renderCardsSummary();
+  renderList();
+  try { cardSelectEl.value = id; } catch(_) {}
+  renderTplSelectorsFromCards();
+
+  tick('カードを追加しました');
+});
+
+/* template modal events */
+manageTemplatesBtn.addEventListener('click', ()=>{ renderTplSelectorsFromCards(); renderTplList(); tplModal.classList.add('show'); });
+closeTplModalBtn.addEventListener('click', ()=> tplModal.classList.remove('show'));
+tplModal.addEventListener('click', (e)=>{ if(e.target===tplModal) tplModal.classList.remove('show'); });
+
+/* add template & apply + preapply neighbors */
+$('#addTpl').addEventListener('click', function(){
+  var cardId = tplCardEl.value;
+  var day = toNumber(tplDayEl.value || '');
+  var amount = toNumber(tplAmountEl.value || '');
+  var memo = (tplMemoEl.value || '').trim();
+  var est = !!tplEstEl.checked;
+
+  if (!cardId) { tplStatusEl.textContent = 'カード未選択'; return; }
+  if (!Number.isFinite(day) || day < 1 || day > 31) { tplStatusEl.textContent = '日付は1-31で'; return; }
+  if (!Number.isFinite(amount) || amount <= 0) { tplStatusEl.textContent = '金額を数値で'; return; }
+
+  templates.push({ id: uuid(), cardId: cardId, day: day|0, amount: +amount, memo: memo, est: est });
+  save(KEYS_TPL.LIST, templates);
+
+  tplDayEl.value = ''; tplAmountEl.value = ''; tplMemoEl.value = ''; tplEstEl.checked = false;
+  renderTplList();
+
+  var ym = getMonthKey();
+  var addedNow = applyTemplatesForMonth(ym); // ← 毎回適用
+  preapplyNeighbors(ym);                    // ← 前後月にも適用
+
+  render();
+
+  tplStatusEl.textContent = addedNow ? (addedNow + '件をこの月に追加しました') : 'この月への追加はありません（同一明細あり）';
+  setTimeout(function(){ tplStatusEl.textContent = ''; }, 1200);
+});
+
+tplListEl.addEventListener('click', (e)=>{
+  const del=e.target.closest('button[data-del-tpl]'); if(!del) return;
+  const id=del.dataset.delTpl; templates=templates.filter(t=>t.id!==id); save(KEYS_TPL.LIST,templates); renderTplList();
+});
+
+/* settings modal */
+openSettingsBtn.addEventListener('click', ()=>{
+  paydayInput.value = paydayBase;
+  adjWeekendsEl.checked = !!adjustWeekends;
+  holidaysInput.value = (holidays||[]).join(', ');
+  settingsModal.classList.add('show');
+});
+closeSettingsBtn.addEventListener('click', ()=> settingsModal.classList.remove('show'));
+settingsModal.addEventListener('click', (e)=>{ if(e.target===settingsModal) settingsModal.classList.remove('show'); });
+saveSettingsBtn.addEventListener('click', ()=>{
+  const v = toNumber(paydayInput.value||'');
+  if(!Number.isFinite(v) || v<1 || v>31){ tick('ベース給料日は1〜31で入力してください'); return; }
+  paydayBase = v|0;
+  adjustWeekends = !!adjWeekendsEl.checked;
+  const raw = (holidaysInput.value||'').split(/[\s,]+/).map(s=>s.trim()).filter(Boolean);
+  holidays = raw.map(s=>s.slice(0,10)).filter(s=>/^\d{4}-\d{2}-\d{2}$/.test(s));
+  save(KEY_PAYDAY, paydayBase); save(KEY_ADJ_WK, adjustWeekends); save(KEY_HOLIDAYS, holidays);
+  monthEl.value = anchorForDate(new Date());
+  applyTemplatesForMonth(getMonthKey());
+  preapplyNeighbors(getMonthKey());
+  render();
+  settingsModal.classList.remove('show');
+  tick('設定を保存しました');
+});
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+  // ★ここをあなたの値に置換（Settings > API）
+  const SUPABASE_URL = "https://jdrtyxbwmmedahaqfcwb.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkcnR5eGJ3bW1lZGFoYXFmY3diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMzk3NjMsImV4cCI6MjA3MzkxNTc2M30.di38i9dUdudwomeKKfmIiWU1gCabAI8g6nQRZ-9rbr0";
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const Q = (id)=>document.getElementById(id);
+  const msg = (m)=> Q("syncMsg").textContent = m || "";
+
+  async function refreshSyncUI(){
+    const { data:{ session } } = await sb.auth.getSession();
+    const user = session?.user || null;
+    Q("authArea").style.display = user ? "none" : "block";
+    Q("syncArea").style.display = user ? "flex" : "none";
+    Q("sWho").textContent = user?.email || "";
+  }
+
+  Q("sSignup").onclick = async ()=>{
+    const { error } = await sb.auth.signUp({ email:Q("sEmail").value, password:Q("sPw").value });
+    msg(error ? "登録失敗: "+error.message : "登録OK。続けてログインしてね");
+    refreshSyncUI();
+  };
+  Q("sLogin").onclick = async ()=>{
+    const { error } = await sb.auth.signInWithPassword({ email:Q("sEmail").value, password:Q("sPw").value });
+    msg(error ? "ログイン失敗: "+error.message : "ログイン成功！");
+    refreshSyncUI();
+  };
+  Q("sLogout").onclick = async ()=>{ await sb.auth.signOut(); msg("ログアウトしました"); refreshSyncUI(); };
+
+  // いまのアプリ状態を丸ごと保存/読込
+  function packAll(){ return { cards, entries, templates, paydayBase, adjustWeekends, holidays }; }
+  function unpackAll(o){
+    if(!o) return;
+    if(Array.isArray(o.cards)) cards=o.cards;
+    if(o.entries && typeof o.entries==="object") entries=o.entries;
+    if(Array.isArray(o.templates)) templates=o.templates;
+    if(typeof o.paydayBase==="number") paydayBase=o.paydayBase|0;
+    if(typeof o.adjustWeekends==="boolean") adjustWeekends=o.adjustWeekends;
+    if(Array.isArray(o.holidays)) holidays=o.holidays;
+    // ローカルにも保存して反映
+    save(KEYS.CARDS,cards); save(KEYS.ENTRIES,entries); save(KEYS_TPL.LIST,templates);
+    save(KEY_PAYDAY,paydayBase); save(KEY_ADJ_WK,adjustWeekends); save(KEY_HOLIDAYS,holidays);
+    render();
+  }
+
+  Q("cloudSave").onclick = async ()=>{
+    try{
+      const { data:{ user } } = await sb.auth.getUser(); if(!user) throw new Error("未ログイン");
+      msg("アップロード中…");
+      const { error } = await sb.from("app_states").upsert({ user_id:user.id, payload:packAll(), updated_at:new Date().toISOString() });
+      if(error) throw error;
+      msg("クラウド保存しました ✅");
+    }catch(e){ msg("保存失敗: "+e.message); }
+  };
+
+  Q("cloudLoad").onclick = async ()=>{
+    try{
+      const { data:{ user } } = await sb.auth.getUser(); if(!user) throw new Error("未ログイン");
+      msg("ダウンロード中…");
+      const { data, error } = await sb.from("app_states").select("payload, updated_at").eq("user_id", user.id).maybeSingle();
+      if(error) throw error;
+      if(!data){ msg("サーバーにデータがありません"); return; }
+      unpackAll(data.payload);
+      msg("クラウド読込OK ✅");
+    }catch(e){ msg("読込失敗: "+e.message); }
+  };
+
+  refreshSyncUI();
+  sb.auth.onAuthStateChange(()=>refreshSyncUI());
+</script>
+
+</body>
+</html>
