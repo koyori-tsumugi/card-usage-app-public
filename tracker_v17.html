@@ -134,8 +134,8 @@
     <section class="card">
       <h2 style="font-size:14px;margin:0 0 8px">クラウド同期（ログインが必要）</h2>
       <div id="authArea">
-        <input id="sEmail" type="email" placeholder="メール">
-        <input id="sPw" type="password" placeholder="パスワード">
+        <input id="sEmail" type="email" placeholder="メール" autocomplete="username">
+        <input id="sPw" type="password" placeholder="パスワード" autocomplete="current-password">
         <button id="sSignup" class="btn" type="button">新規登録</button>
         <button id="sLogin" class="btn" type="button">ログイン</button>
         <button id="sResetPw" class="btn ghost" type="button">パスワードをお忘れですか？</button>
@@ -381,16 +381,30 @@ window.addEventListener("pagehide", flushBeforeHide);
 
   // ▼ログインはPC/スマホ両対応の専用ハンドラに変更
   const sLoginEl = _q("sLogin");
+  let loginBusy = false; // ← これを追加
 
   async function handleLogin(e) {
     if (e) { e.preventDefault(); e.stopPropagation(); }
+    if (loginBusy) return;            // ← 追加：多重実行ガード
+    loginBusy = true;
+    sLoginEl.disabled = true;                    // ← 追加
+    sLoginEl.setAttribute("aria-busy","true"); 
+
     const email = (_q("sEmail").value || "").trim();
     const password = _q("sPw").value || "";
-    if (!email || !password) { syncSetMsg("メールとパスワードを入力してください"); return; }
+    if (!email || !password) { 
+        syncSetMsg("メールとパスワードを入力してください"); 
+        loginBusy = false; 
+        return; }
 
     syncSetMsg("ログイン中…");
+
+    // 5秒でタイムアウト扱いにする
+    const loginPromise = sb.auth.signInWithPassword({ email, password });
+    const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 5000));
+
     try {
-      const { error } = await sb.auth.signInWithPassword({ email, password });
+      const { data, error } = await Promise.race([loginPromise, timeout]);
       if (error) {
         syncSetMsg("ログイン失敗: " + error.message);
       } else {
@@ -398,15 +412,29 @@ window.addEventListener("pagehide", flushBeforeHide);
         await refreshSyncUI();
       }
     } catch (err) {
-      syncSetMsg("ログイン失敗: " + (err?.message || err));
+      console.error("login error:", err);
+      if (String(err && err.message).includes("timeout")) {
+        syncSetMsg("ログイン失敗: 応答がありません（ネットワークや拡張機能を確認）");
+      } else {
+        syncSetMsg("ログイン失敗: " + (err?.message || err));
+      }
+    } finally {
+      loginBusy = false;              // ← 忘れず解除
+      sLoginEl.disabled = false;                 // ← 追加
+      sLoginEl.removeAttribute("aria-busy");     // ← 追加
     }
   }
 
   // クリックとタッチの両方で確実に発火（passive: false）
   if (sLoginEl) {
-    sLoginEl.addEventListener("click", handleLogin, { passive: false });
-    sLoginEl.addEventListener("touchend", handleLogin, { passive: false });
+
+    sLoginEl.addEventListener("pointerup", handleLogin, { passive:false });
   }
+  ["sEmail","sPw"].forEach(id=>{
+    _q(id)?.addEventListener("keydown", e => {
+      if (e.key === "Enter") handleLogin(e);
+     });
+  });
 
   on("sLogout", async ()=> {
     try { await sb.auth.signOut(); } catch(_) {}
@@ -422,17 +450,69 @@ window.addEventListener("pagehide", flushBeforeHide);
     syncSetMsg(error ? ("リセット送信失敗: " + error.message) : "リセット用メールを送信しました");
   });
 
-// リセットリンクから戻ってきた時：新パスワード入力を促す
-sb.auth.onAuthStateChange(async (event) => {
-  if (event === "PASSWORD_RECOVERY" || location.hash === "#pw-reset") {
-    const newPw = prompt("新しいパスワードを入力してください（8文字以上推奨）");
-    if (!newPw) return;
-    const { error } = await sb.auth.updateUser({ password: newPw });
-    syncSetMsg(error ? ("パスワード更新失敗: " + error.message) : "パスワードを更新しました。ログインし直してください。");
-    // ハッシュを戻す
-    if (location.hash === "#pw-reset") history.replaceState(null, "", location.pathname);
+  // ▼ パスワード再設定パネル
+  function ensurePwResetPanel() {
+    let panel = document.getElementById("pwResetPanel");
+    if (panel) return panel;
+
+    panel = document.createElement("div");
+    panel.id = "pwResetPanel";
+    panel.className = "card";
+    panel.style.marginTop = "8px";
+    panel.innerHTML = `
+      <div class="sub" style="margin-bottom:8px">新しいパスワードを入力してください</div>
+      <div class="row">
+        <input id="newPw1" type="password" placeholder="新パスワード">
+        <input id="newPw2" type="password" placeholder="新パスワード（確認）">
+        <button id="applyNewPw" class="btn" type="button">更新</button>
+        <button id="cancelNewPw" class="btn ghost" type="button">閉じる</button>
+      </div>
+      <div class="sub" id="pwResetMsg" style="margin-top:6px"></div>
+    `;
+    const authArea = document.getElementById("authArea");
+    authArea?.appendChild(panel);
+
+    const msg = (t)=> document.getElementById("pwResetMsg").textContent = t || "";
+
+    document.getElementById("applyNewPw").onclick = async () => {
+      const a = (document.getElementById("newPw1").value || "");
+      const b = (document.getElementById("newPw2").value || "");
+      if (!a || a.length < 8) { msg("8文字以上を推奨します"); return; }
+      if (a !== b) { msg("確認用と一致しません"); return; }
+      try {
+        const { error } = await sb.auth.updateUser({ password: a });
+        if (error) msg("更新失敗: " + error.message);
+        else {
+          msg("パスワードを更新しました。ログインし直してください。");
+          // 終了：フォームを閉じる
+          panel.remove();
+          // ハッシュを戻す
+          if (location.hash === "#pw-reset") history.replaceState(null, "", location.pathname);
+        }
+      } catch (e) {
+        msg("更新失敗: " + (e?.message || e));
+      }
+    };
+
+    document.getElementById("cancelNewPw").onclick = () => {
+      panel.remove();
+      if (location.hash === "#pw-reset") history.replaceState(null, "", location.pathname);
+    };
+
+    return panel;
   }
-});
+
+  // イベント/ハッシュで表示
+  sb.auth.onAuthStateChange(async (event) => {
+    if (event === "PASSWORD_RECOVERY") {
+      ensurePwResetPanel(); // パネル表示
+    }
+  });
+
+  // 直接 #pw-reset で来た時も表示
+  if (location.hash === "#pw-reset") {
+    ensurePwResetPanel();
+  }
 
 
   // いまのアプリ全体を1つのJSONにまとめる
