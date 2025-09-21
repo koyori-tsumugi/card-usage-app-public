@@ -379,18 +379,34 @@ window.addEventListener("pagehide", flushBeforeHide);
     refreshSyncUI();
   });
 
-  on("sLogin", async ()=> {
+  // ▼ログインはPC/スマホ両対応の専用ハンドラに変更
+  const sLoginEl = _q("sLogin");
+
+  async function handleLogin(e) {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
     const email = (_q("sEmail").value || "").trim();
     const password = _q("sPw").value || "";
     if (!email || !password) { syncSetMsg("メールとパスワードを入力してください"); return; }
+
+    syncSetMsg("ログイン中…");
     try {
       const { error } = await sb.auth.signInWithPassword({ email, password });
-      syncSetMsg(error ? "ログイン失敗: "+error.message : "ログイン成功");
-    } catch (e) {
-      syncSetMsg("ログイン失敗: " + (e?.message || e));
+      if (error) {
+        syncSetMsg("ログイン失敗: " + error.message);
+      } else {
+        syncSetMsg("ログイン成功");
+        await refreshSyncUI();
+      }
+    } catch (err) {
+      syncSetMsg("ログイン失敗: " + (err?.message || err));
     }
-    refreshSyncUI();
-  });
+  }
+
+  // クリックとタッチの両方で確実に発火（passive: false）
+  if (sLoginEl) {
+    sLoginEl.addEventListener("click", handleLogin, { passive: false });
+    sLoginEl.addEventListener("touchend", handleLogin, { passive: false });
+  }
 
   on("sLogout", async ()=> {
     try { await sb.auth.signOut(); } catch(_) {}
