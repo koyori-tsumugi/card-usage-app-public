@@ -295,8 +295,9 @@ function markDirty() {
     autosaveTimer = null;
     if (dirty) await cloudSaveSilent();
   }, 5000); // 5秒後にまとめて送る（調整可）
-  window.markDirty = markDirty;
 }
+
+window.markDirty = markDirty;
 
 // タブが隠れた/閉じられる直前に即保存（できるだけ）
 async function flushBeforeHide() {
@@ -355,23 +356,7 @@ window.addEventListener("pagehide", flushBeforeHide);
 
   function syncSetMsg(m){ _q("syncMsg").textContent = m || ""; }
 
-  async function refreshSyncUI(){
-    const { data:{ session } } = await sb.auth.getSession();
-    const user = session?.user || null;
-    _q("authArea").style.display = user ? "none" : "block";
-    _q("syncArea").style.display = user ? "flex" : "none";
-    _q("sWho").textContent = user?.email || "";
 
-  // まれに getSession が反映前の値を返す環境向け：少し後でもう一度反映
-  setTimeout(async ()=>{
-    const { data:{ session } } = await sb.auth.getSession();
-    const user2 = session?.user || null;
-    _q("authArea").style.display = user2 ? "none" : "block";
-    _q("syncArea").style.display = user2 ? "flex" : "none";
-    _q("sWho").textContent = user2?.email || "";
-  }, 120);
-    
-  }
 
   on("sSignup", async ()=> {
     const { error } = await sb.auth.signUp({ email:_q("sEmail").value, password:_q("sPw").value });
@@ -395,13 +380,14 @@ window.addEventListener("pagehide", flushBeforeHide);
     if (!email || !password) { 
         syncSetMsg("メールとパスワードを入力してください"); 
         loginBusy = false; 
+        if (sLoginEl) { sLoginEl.disabled = false; sLoginEl.removeAttribute("aria-busy"); }
         return; }
 
     syncSetMsg("ログイン中…");
 
-    // 5秒でタイムアウト扱いにする
+    // 20秒でタイムアウト扱いにする
     const loginPromise = sb.auth.signInWithPassword({ email, password });
-    const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 5000));
+    const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 20000));
 
     try {
       const { data, error } = await Promise.race([loginPromise, timeout]);
@@ -429,6 +415,12 @@ window.addEventListener("pagehide", flushBeforeHide);
   if (sLoginEl) {
 
     sLoginEl.addEventListener("pointerup", handleLogin, { passive:false });
+    sLoginEl.addEventListener("click",      handleLogin, { passive:false });
+    sLoginEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") handleLogin(e);
+    }, { passive:false });
+
+
   }
   ["sEmail","sPw"].forEach(id=>{
     _q(id)?.addEventListener("keydown", e => {
@@ -514,6 +506,11 @@ window.addEventListener("pagehide", flushBeforeHide);
     ensurePwResetPanel();
   }
 
+  // 「パスワード再設定メール」から戻ると hash に type=recovery が入る
+  if (location.hash && /type=recovery/i.test(location.hash)) {
+    ensurePwResetPanel();
+  }
+
 
   // いまのアプリ全体を1つのJSONにまとめる
 
@@ -581,6 +578,33 @@ window.addEventListener("pagehide", flushBeforeHide);
   refreshSyncUI();
   sb.auth.onAuthStateChange(()=>refreshSyncUI());
 
+  async function refreshSyncUI(){
+    const { data:{ session } } = await sb.auth.getSession();
+    const user = session?.user || null;
+    _q("authArea").style.display = user ? "none" : "block";
+    _q("syncArea").style.display = user ? "flex" : "none";
+    _q("sWho").textContent = user?.email || "";
+
+    setTimeout(async ()=>{
+      const { data:{ session } } = await sb.auth.getSession();
+      const user2 = session?.user || null;
+      _q("authArea").style.display = user2 ? "none" : "block";
+      _q("syncArea").style.display = user2 ? "flex" : "none";
+      _q("sWho").textContent = user2?.email || "";
+    }, 120);
+
+    // ←← ここを追加
+    const pwPanel = document.getElementById("pwResetPanel");
+    if (user && pwPanel) {
+      pwPanel.remove();
+      if (/type=recovery|pw-reset/i.test(location.hash)) {
+        history.replaceState(null, "", location.pathname);
+      }
+    }
+  }
+
+
+
 })();  
 
 </script>
@@ -639,7 +663,7 @@ let autosavePaused = false;
 const save=(k,v)=>{
   try{
     localStorage.setItem(k, JSON.stringify(v));
-    if (!autosavePaused) markDirty();                // ← これを追加
+    if (!autosavePaused && typeof window.markDirty === 'function') window.markDirty(); // クラウド自動保存トリガ
     tick('保存しました');
   }catch(e){
     tick('保存失敗');
