@@ -39,6 +39,10 @@
   .payday-eta.ok{color:var(--ok)}
   .badges{display:flex; gap:8px; flex-wrap:wrap}
   .badge{padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid var(--border); background:#fff}
+  /* 誤って上に重なる透明要素を無効化するため、認証UIを最前面へ */
+  #authArea { position: relative; z-index: 50; }
+  #authArea .btn { pointer-events: auto; } /* 念のためクリック有効を明示 */
+
 </style>
 </head>
 <body>
@@ -337,6 +341,17 @@ window.addEventListener("pagehide", flushBeforeHide);
 
 
   const _q = (id)=>document.getElementById(id);
+
+// クリック/Enter/Spaceでハンドラを確実に呼ぶヘルパー
+  function on(id, handler) {
+    const el = _q(id);
+    if (!el) return;
+    el.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); handler(e); }, { passive:false });
+    el.addEventListener('keydown', (e)=>{
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handler(e); }
+    });
+  }
+
   function syncSetMsg(m){ _q("syncMsg").textContent = m || ""; }
 
   async function refreshSyncUI(){
@@ -345,31 +360,50 @@ window.addEventListener("pagehide", flushBeforeHide);
     _q("authArea").style.display = user ? "none" : "block";
     _q("syncArea").style.display = user ? "flex" : "none";
     _q("sWho").textContent = user?.email || "";
+
+  // まれに getSession が反映前の値を返す環境向け：少し後でもう一度反映
+  setTimeout(async ()=>{
+    const { data:{ session } } = await sb.auth.getSession();
+    const user2 = session?.user || null;
+    _q("authArea").style.display = user2 ? "none" : "block";
+    _q("syncArea").style.display = user2 ? "flex" : "none";
+    _q("sWho").textContent = user2?.email || "";
+  }, 120);
+    
   }
 
-  _q("sSignup").onclick = async ()=> {
+  on("sSignup", async ()=> {
     const { error } = await sb.auth.signUp({ email:_q("sEmail").value, password:_q("sPw").value });
     syncSetMsg(error ? "登録失敗: "+error.message : "登録OK。続けてログインしてください。");
     refreshSyncUI();
-  };
-  _q("sLogin").onclick = async ()=> {
-    const { error } = await sb.auth.signInWithPassword({ email:_q("sEmail").value, password:_q("sPw").value });
-    syncSetMsg(error ? "ログイン失敗: "+error.message : "ログイン成功");
+  });
+
+  on("sLogin", async ()=> {
+    const email = (_q("sEmail").value || "").trim();
+    const password = _q("sPw").value || "";
+    if (!email || !password) { syncSetMsg("メールとパスワードを入力してください"); return; }
+    try {
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      syncSetMsg(error ? "ログイン失敗: "+error.message : "ログイン成功");
+    } catch (e) {
+      syncSetMsg("ログイン失敗: " + (e?.message || e));
+    }
     refreshSyncUI();
-  };
-  _q("sLogout").onclick = async ()=> { await sb.auth.signOut(); syncSetMsg("ログアウトしました"); refreshSyncUI(); };
+  });
 
+  on("sLogout", async ()=> {
+    try { await sb.auth.signOut(); } catch(_) {}
+    syncSetMsg("ログアウトしました");
+    setTimeout(refreshSyncUI, 50); // 反映待ちの保険
+  });
 
-
-  // パスワードリセットメール送信
-_q("sResetPw").onclick = async () => {
-  const email = (_q("sEmail").value || "").trim();
-  if (!email) { syncSetMsg("メールアドレスを入力してください"); return; }
-  // リンククリック後に戻すURL（このページ）— ハッシュで復旧UIを判定
-  const redirectTo = location.origin + location.pathname + "#pw-reset";
-  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
-  syncSetMsg(error ? ("リセット送信失敗: " + error.message) : "リセット用メールを送信しました");
-};
+  on("sResetPw", async ()=> {
+    const email = (_q("sEmail").value || "").trim();
+    if (!email) { syncSetMsg("メールアドレスを入力してください"); return; }
+    const redirectTo = location.origin + location.pathname + "#pw-reset";
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+    syncSetMsg(error ? ("リセット送信失敗: " + error.message) : "リセット用メールを送信しました");
+  });
 
 // リセットリンクから戻ってきた時：新パスワード入力を促す
 sb.auth.onAuthStateChange(async (event) => {
