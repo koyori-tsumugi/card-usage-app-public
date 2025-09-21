@@ -235,6 +235,21 @@
 <!-- Supabase（UMD版） -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
+
+(async () => {
+  // ① ライブラリ読み込み確認（←ここが今回の追加）
+  if (!window.supabase || !window.supabase.createClient) {
+    const msg = "Supabaseライブラリの読込に失敗しました。ネットワークや広告ブロッカーを確認してください。";
+    console.warn(msg);
+    const m = document.getElementById("syncMsg");
+    if (m) m.textContent = msg;
+    ["sSignup","sLogin","sLogout","sResetPw"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.onclick = () => alert(msg);
+    });
+    return; // ライブラリ無いときはここで終了
+  }
+
   // ←あなたの値に置き換え
   const SUPABASE_URL = "https://jwetmkoemtzonzvcsawn.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3ZXRta29lbXR6b256dmNzYXduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzNzgwMzcsImV4cCI6MjA3Mzk1NDAzN30.Llt8iNr9dx3PmR6jInNlGSZnI3zIln4LLyR1dge7fN0";
@@ -434,6 +449,9 @@ sb.auth.onAuthStateChange(async (event) => {
 
   refreshSyncUI();
   sb.auth.onAuthStateChange(()=>refreshSyncUI());
+
+})();  
+
 </script>
 
 <script>
