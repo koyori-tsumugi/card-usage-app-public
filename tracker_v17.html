@@ -295,6 +295,7 @@ function markDirty() {
     autosaveTimer = null;
     if (dirty) await cloudSaveSilent();
   }, 5000); // 5秒後にまとめて送る（調整可）
+  window.markDirty = markDirty;
 }
 
 // タブが隠れた/閉じられる直前に即保存（できるだけ）
