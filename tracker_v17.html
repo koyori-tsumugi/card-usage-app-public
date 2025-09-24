@@ -39,10 +39,9 @@
   .payday-eta.ok{color:var(--ok)}
   .badges{display:flex; gap:8px; flex-wrap:wrap}
   .badge{padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid var(--border); background:#fff}
-  /* 誤って上に重なる透明要素を無効化するため、認証UIを最前面へ */
+  /* 認証UIを最前面へ */
   #authArea { position: relative; z-index: 50; }
-  #authArea .btn { pointer-events: auto; } /* 念のためクリック有効を明示 */
-
+  #authArea .btn { pointer-events: auto; }
 </style>
 </head>
 <body>
@@ -130,7 +129,7 @@
       <ul id="list"></ul>
     </section>
 
-    <!-- クラウド同期（※あなたのリクエスト通り、</main>直前に挿入） -->
+    <!-- クラウド同期（ログイン） -->
     <section class="card">
       <h2 style="font-size:14px;margin:0 0 8px">クラウド同期（ログインが必要）</h2>
       <div id="authArea">
@@ -158,76 +157,75 @@
     </nav>
   </main>
 
-      <!-- card modal -->
-      <div id="cardModal" class="modal">
-        <div class="panel">
-          <div class="row-mid">
-            <h3 style="margin:0">カード管理</h3>
-            <button id="closeCardModal" class="btn ghost" type="button" style="margin-left:auto; height:auto; padding:6px 10px">閉じる</button>
-          </div>
-          <div class="sub" style="margin-top:4px">カード名と月の目標額（枠）を編集・追加できます</div>
-          <ul id="cardList" class="mb-2" style="margin-top:8px"></ul>
-          <div class="row-mid" style="margin-top:6px">
-            <input id="newCardName" placeholder="カード名" style="flex:1 1 auto">
-            <input id="newCardTarget" placeholder="目標額" inputmode="numeric" style="width:160px">
-            <button id="addCard" class="btn" type="button">カード追加</button>
-          </div>
-       </div>
+  <!-- card modal -->
+  <div id="cardModal" class="modal">
+    <div class="panel">
+      <div class="row-mid">
+        <h3 style="margin:0">カード管理</h3>
+        <button id="closeCardModal" class="btn ghost" type="button" style="margin-left:auto; height:auto; padding:6px 10px">閉じる</button>
       </div>
+      <div class="sub" style="margin-top:4px">カード名と月の目標額（枠）を編集・追加できます</div>
+      <ul id="cardList" class="mb-2" style="margin-top:8px"></ul>
+      <div class="row-mid" style="margin-top:6px">
+        <input id="newCardName" placeholder="カード名" style="flex:1 1 auto">
+        <input id="newCardTarget" placeholder="目標額" inputmode="numeric" style="width:160px">
+        <button id="addCard" class="btn" type="button">カード追加</button>
+      </div>
+    </div>
+  </div>
 
-      <!-- template modal -->
-      <div id="tplModal" class="modal">
-        <div class="panel">
-          <div class="row-mid">
-            <h3 style="margin:0">定例支出（毎月自動追加／平日調整なし）</h3>
-            <button id="closeTplModal" class="btn ghost" type="button" style="margin-left:auto; height:auto; padding:6px 10px">閉じる</button>
-          </div>
-          <div class="sub" style="margin-top:4px">指定した日付でそのまま登録します（休日でも移動しません）</div>
-          <ul id="tplList" style="margin-top:8px"></ul>
-          <div class="row-mid" style="margin-top:10px">
-            <select id="tplCard" style="min-width:140px"></select>
-            <input id="tplDay" inputmode="numeric" placeholder="日(1-31)" style="width:110px">
-            <input id="tplAmount" inputmode="numeric" placeholder="金額(円)" style="width:140px">
-            <input id="tplMemo" placeholder="メモ" style="flex:1 1 auto">
-            <label class="sub" style="display:flex; align-items:center; gap:6px"><input id="tplEst" type="checkbox">概算</label>
-            <button id="addTpl" class="btn" type="button">テンプレ追加</button>
-          </div>
-          <div class="row-mid" style="margin-top:10px">
-            <div class="sub" id="tplStatus"></div>
-          </div>
+  <!-- template modal -->
+  <div id="tplModal" class="modal">
+    <div class="panel">
+      <div class="row-mid">
+        <h3 style="margin:0">定例支出（毎月自動追加／平日調整なし）</h3>
+        <button id="closeTplModal" class="btn ghost" type="button" style="margin-left:auto; height:auto; padding:6px 10px">閉じる</button>
+      </div>
+      <div class="sub" style="margin-top:4px">指定した日付でそのまま登録します（休日でも移動しません）</div>
+      <ul id="tplList" style="margin-top:8px"></ul>
+      <div class="row-mid" style="margin-top:10px">
+        <select id="tplCard" style="min-width:140px"></select>
+        <input id="tplDay" inputmode="numeric" placeholder="日(1-31)" style="width:110px">
+        <input id="tplAmount" inputmode="numeric" placeholder="金額(円)" style="width:140px">
+        <input id="tplMemo" placeholder="メモ" style="flex:1 1 auto">
+        <label class="sub" style="display:flex; align-items:center; gap:6px"><input id="tplEst" type="checkbox">概算</label>
+        <button id="addTpl" class="btn" type="button">テンプレ追加</button>
+      </div>
+      <div class="row-mid" style="margin-top:10px">
+        <div class="sub" id="tplStatus"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- settings modal -->
+  <div id="settingsModal" class="modal">
+    <div class="panel">
+      <div class="row-mid">
+        <h3 style="margin:0">締日設定</h3>
+        <button id="closeSettings" class="btn ghost" type="button" style="margin-left:auto; height:auto; padding:6px 10px">閉じる</button>
+      </div>
+      <div class="row-mid" style="margin-top:8px">
+        <label class="sub" for="paydayInput">ベース給料日（1〜31）</label>
+        <input id="paydayInput" inputmode="numeric" placeholder="25 など" style="width:120px">
+        <div class="sub">給料日のみ休日なら前営業日に繰上げ。定例は移動しません。</div>
+      </div>
+      <div class="row-mid" style="margin-top:8px">
+        <label class="sub"><input id="adjWeekends" type="checkbox" checked> 土日を休業日として扱う（給料日のみ）</label>
+      </div>
+      <div class="row-mid" style="margin-top:8px; align-items:flex-start">
+        <div style="flex:1 1 100%">
+          <label class="sub" for="holidaysInput">追加の休業日（YYYY-MM-DD をカンマ or 改行で）</label>
+          <textarea id="holidaysInput" placeholder="2025-01-01, 2025-01-13&#10;2025-02-11 ..."></textarea>
         </div>
       </div>
 
-      <!-- settings modal -->
-      <div id="settingsModal" class="modal">
-        <div class="panel">
-          <div class="row-mid">
-            <h3 style="margin:0">締日設定</h3>
-            <button id="closeSettings" class="btn ghost" type="button" style="margin-left:auto; height:auto; padding:6px 10px">閉じる</button>
-          </div>
-          <div class="row-mid" style="margin-top:8px">
-            <label class="sub" for="paydayInput">ベース給料日（1〜31）</label>
-            <input id="paydayInput" inputmode="numeric" placeholder="25 など" style="width:120px">
-            <div class="sub">給料日のみ休日なら前営業日に繰上げ。定例は移動しません。</div>
-          </div>
-          <div class="row-mid" style="margin-top:8px">
-            <label class="sub"><input id="adjWeekends" type="checkbox" checked> 土日を休業日として扱う（給料日のみ）</label>
-          </div>
-          <div class="row-mid" style="margin-top:8px; align-items:flex-start">
-            <div style="flex:1 1 100%">
-              <label class="sub" for="holidaysInput">追加の休業日（YYYY-MM-DD をカンマ or 改行で）</label>
-              <textarea id="holidaysInput" placeholder="2025-01-01, 2025-01-13&#10;2025-02-11 ..."></textarea>
-            </div>
-          </div>
-
-      <!-- ▼ここから追加：テスト日（任意） -->
+      <!-- テスト日（任意） -->
       <div class="row-mid" style="margin-top:8px">
         <label class="sub" for="mockTodayInput">テスト日（任意, YYYY-MM-DD）</label>
         <input id="mockTodayInput" placeholder="例: 2025-11-20" style="width:160px">
         <button id="applyMockToday" class="btn ghost" type="button">反映</button>
         <button id="clearMockToday" class="btn ghost" type="button">解除</button>
       </div>
-      <!-- ▲ここまで追加 -->
 
       <div class="row-mid" style="margin-top:10px">
         <button id="saveSettings" class="btn" type="button">保存</button>
@@ -235,1136 +233,1049 @@
     </div>
   </div>
 
-
-<!-- Supabase（UMD版） -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script>
-
-(async () => {
-  // ① ライブラリ読み込み確認（←ここが今回の追加）
-  if (!window.supabase || !window.supabase.createClient) {
-    const msg = "Supabaseライブラリの読込に失敗しました。ネットワークや広告ブロッカーを確認してください。";
-    console.warn(msg);
-    const m = document.getElementById("syncMsg");
-    if (m) m.textContent = msg;
-    ["sSignup","sLogin","sLogout","sResetPw"].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.onclick = () => alert(msg);
-    });
-    return; // ライブラリ無いときはここで終了
-  }
-
-  // ←あなたの値に置き換え
-  const SUPABASE_URL = "https://jwetmkoemtzonzvcsawn.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3ZXRta29lbXR6b256dmNzYXduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzNzgwMzcsImV4cCI6MjA3Mzk1NDAzN30.Llt8iNr9dx3PmR6jInNlGSZnI3zIln4LLyR1dge7fN0";
-  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-
-// ====== サイレント自動保存（クラウド） ======
-let dirty = false;
-let autosaveTimer = null;
-
-// ユーザーがログイン中か確認
-async function currentUser() {
-  const { data:{ user } } = await sb.auth.getUser();
-  return user || null;
-}
-
-// 通常のクラウド保存（メッセージなし）
-async function cloudSaveSilent() {
-  const user = await currentUser();
-  if (!user) return;
-  const payload = packAll();
-  try {
-    await sb.from("app_states").upsert({
-      user_id: user.id,
-      payload,
-      updated_at: new Date().toISOString()
-    });
-    dirty = false;
-  } catch (_) {
-    // 失敗時は握りつぶし（次のトリガで再挑戦）
-  }
-}
-
-// 「変更あり」をマークして数秒後に自動保存
-function markDirty() {
-  dirty = true;
-  if (autosaveTimer) return;
-  autosaveTimer = setTimeout(async () => {
-    autosaveTimer = null;
-    if (dirty) await cloudSaveSilent();
-  }, 5000); // 5秒後にまとめて送る（調整可）
-}
-
-window.markDirty = markDirty;
-
-// タブが隠れた/閉じられる直前に即保存（できるだけ）
-async function flushBeforeHide() {
-  if (!dirty) return;
-  // なるべく同期で終わらせたいので直で叩く
-  try {
-    await cloudSaveSilent();
-  } catch(_) {}
-
-  // それでもダメそうなら keepalive で最終送信
-  if (dirty) {
-    const user = await currentUser();
-    if (!user) return;
-
-    const url = `${SUPABASE_URL}/rest/v1/app_states?on_conflict=user_id`;
-    const body = JSON.stringify({
-      user_id: user.id,
-      payload: packAll(),
-      updated_at: new Date().toISOString()
-    });
-    // PostgREST の upsert 相当（PKが user_id の想定）
-    fetch(url, {
-      method: "POST",                     // PK一致1行を更新する想定
-      headers: {
-        "apikey": SUPABASE_ANON_KEY,
-        "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-        "Content-Type": "application/json",
-        "Prefer": "resolution=merge-duplicates"
-      },
-      body,
-      keepalive: true
-    });
-    // keepalive は完了を待たないが送信は試行される
-    dirty = false;
-  }
-}
-
-// タブ状態イベント
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden) flushBeforeHide();
-});
-window.addEventListener("pagehide", flushBeforeHide);
-
-
-  const _q = (id)=>document.getElementById(id);
-
-// クリック/Enter/Spaceでハンドラを確実に呼ぶヘルパー
-  function on(id, handler) {
-    const el = _q(id);
-    if (!el) return;
-    el.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); handler(e); }, { passive:false });
-    el.addEventListener('keydown', (e)=>{
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handler(e); }
-    });
-  }
-
-  function syncSetMsg(m){ _q("syncMsg").textContent = m || ""; }
-
-
-
-  on("sSignup", async ()=> {
-    const { error } = await sb.auth.signUp({ email:_q("sEmail").value, password:_q("sPw").value });
-    syncSetMsg(error ? "登録失敗: "+error.message : "登録OK。続けてログインしてください。");
-    refreshSyncUI();
-  });
-
-  // ▼ログインはPC/スマホ両対応の専用ハンドラに変更
-  const sLoginEl = _q("sLogin");
-  let loginBusy = false; // ← これを追加
-
-  async function handleLogin(e) {
-    if (e) { e.preventDefault(); e.stopPropagation(); }
-    if (loginBusy) return;            // ← 追加：多重実行ガード
-    loginBusy = true;
-    sLoginEl.disabled = true;                    // ← 追加
-    sLoginEl.setAttribute("aria-busy","true"); 
-
-    const email = (_q("sEmail").value || "").trim();
-    const password = _q("sPw").value || "";
-    if (!email || !password) { 
-        syncSetMsg("メールとパスワードを入力してください"); 
-        loginBusy = false; 
-        if (sLoginEl) { sLoginEl.disabled = false; sLoginEl.removeAttribute("aria-busy"); }
-        return; }
-
-    syncSetMsg("ログイン中…");
-
-    // 20秒でタイムアウト扱いにする
-    const loginPromise = sb.auth.signInWithPassword({ email, password });
-    const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 20000));
-
-    try {
-      const { data, error } = await Promise.race([loginPromise, timeout]);
-      if (error) {
-        syncSetMsg("ログイン失敗: " + error.message);
-      } else {
-        syncSetMsg("ログイン成功");
-        await refreshSyncUI();
-      }
-    } catch (err) {
-      const msg = String(err?.message || err);
-      if (msg.includes("timeout")) {
-        syncSetMsg("ログイン失敗: 応答がありません（回線・拡張機能・会社のネット制限を確認）");
-      } else if (msg.includes("CORS")) {
-        syncSetMsg("ログイン失敗: ブラウザが通信をブロック（URL設定を確認）");
-      } else if (msg.includes("ERR_BLOCKED_BY_CLIENT")) {
-        syncSetMsg("ログイン失敗: 拡張機能が通信を停止（アドブロック一時停止）");
-      } else {
-        syncSetMsg("ログイン失敗: " + msg);
-      }
-    } finally {
-      loginBusy = false;              // ← 忘れず解除
-      sLoginEl.disabled = false;                 // ← 追加
-      sLoginEl.removeAttribute("aria-busy");     // ← 追加
-    }
-  }
-
-  // クリックとタッチの両方で確実に発火（passive: false）
-  if (sLoginEl) {
-
-    sLoginEl.addEventListener("pointerup", handleLogin, { passive:false });
-    sLoginEl.addEventListener("click",      handleLogin, { passive:false });
-    sLoginEl.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") handleLogin(e);
-    }, { passive:false });
-
-
-  }
-  ["sEmail","sPw"].forEach(id=>{
-    _q(id)?.addEventListener("keydown", e => {
-      if (e.key === "Enter") handleLogin(e);
-     });
-  });
-
-  on("sLogout", async ()=> {
-    try { await sb.auth.signOut(); } catch(_) {}
-    syncSetMsg("ログアウトしました");
-    setTimeout(refreshSyncUI, 50); // 反映待ちの保険
-  });
-
-  on("sResetPw", async ()=> {
-    const email = (_q("sEmail").value || "").trim();
-    if (!email) { syncSetMsg("メールアドレスを入力してください"); return; }
-    const redirectTo = location.origin + location.pathname + "#pw-reset";
-    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
-    syncSetMsg(error ? ("リセット送信失敗: " + error.message) : "リセット用メールを送信しました");
-  });
-
-  // ▼ パスワード再設定パネル
-  function ensurePwResetPanel() {
-    let panel = document.getElementById("pwResetPanel");
-    if (panel) return panel;
-
-    panel = document.createElement("div");
-    panel.id = "pwResetPanel";
-    panel.className = "card";
-    panel.style.marginTop = "8px";
-    panel.innerHTML = `
-      <div class="sub" style="margin-bottom:8px">新しいパスワードを入力してください</div>
-      <div class="row">
-        <input id="newPw1" type="password" placeholder="新パスワード">
-        <input id="newPw2" type="password" placeholder="新パスワード（確認）">
-        <button id="applyNewPw" class="btn" type="button">更新</button>
-        <button id="cancelNewPw" class="btn ghost" type="button">閉じる</button>
-      </div>
-      <div class="sub" id="pwResetMsg" style="margin-top:6px"></div>
-    `;
-    const authArea = document.getElementById("authArea");
-    authArea?.appendChild(panel);
-
-    const msg = (t)=> document.getElementById("pwResetMsg").textContent = t || "";
-
-    document.getElementById("applyNewPw").onclick = async () => {
-      const a = (document.getElementById("newPw1").value || "");
-      const b = (document.getElementById("newPw2").value || "");
-      if (!a || a.length < 8) { msg("8文字以上を推奨します"); return; }
-      if (a !== b) { msg("確認用と一致しません"); return; }
-      try {
-        const { error } = await sb.auth.updateUser({ password: a });
-        if (error) msg("更新失敗: " + error.message);
-        else {
-          msg("パスワードを更新しました。ログインし直してください。");
-          // 終了：フォームを閉じる
-          panel.remove();
-          // ハッシュを戻す
-          if (location.hash === "#pw-reset") history.replaceState(null, "", location.pathname);
-        }
-      } catch (e) {
-        msg("更新失敗: " + (e?.message || e));
-      }
-    };
-
-    document.getElementById("cancelNewPw").onclick = () => {
-      panel.remove();
-      if (location.hash === "#pw-reset") history.replaceState(null, "", location.pathname);
-    };
-
-    return panel;
-  }
-
-  // イベント/ハッシュで表示
-  sb.auth.onAuthStateChange(async (event) => {
-    if (event === "PASSWORD_RECOVERY") {
-      ensurePwResetPanel(); // パネル表示
-    }
-  });
-
-  // 直接 #pw-reset で来た時も表示
-  if (location.hash === "#pw-reset") {
-    ensurePwResetPanel();
-  }
-
-  // 「パスワード再設定メール」から戻ると hash に type=recovery が入る
-  if (location.hash && /type=recovery/i.test(location.hash)) {
-    ensurePwResetPanel();
-  }
-
-
-  // いまのアプリ全体を1つのJSONにまとめる
-
-  function packAll(){
-    try{
-      return {
-        cards, entries, templates,
-        paydayBase, adjustWeekends,
-        holidays,                               // 合体後
-        holidaysUser: load(KEY_HOLIDAYS_USER, []) // ★ユーザー追加分も持たせる
-      };
-    }catch(e){ return null; }
-  }
-
-  function unpackAll(obj){
-    if(!obj) return;
-    autosavePaused = true;
-    if(Array.isArray(obj.cards)) cards=obj.cards;
-    if(obj.entries && typeof obj.entries==="object") entries=obj.entries;
-    if(Array.isArray(obj.templates)) templates=obj.templates;
-    if(typeof obj.paydayBase==="number") paydayBase=obj.paydayBase|0;
-    if(typeof obj.adjustWeekends==="boolean") adjustWeekends=obj.adjustWeekends;
-
-    if(Array.isArray(obj.holidays)) holidays = obj.holidays;
-    const holidaysUser = Array.isArray(obj.holidaysUser) ? obj.holidaysUser : load(KEY_HOLIDAYS_USER, []);
-
-    // ローカルにも保存してから画面再描画
-    save(KEYS.CARDS,cards); save(KEYS.ENTRIES,entries); save(KEYS_TPL.LIST,templates);
-    save(KEY_PAYDAY,paydayBase); save(KEY_ADJ_WK,adjustWeekends);
-    saveSilent(KEY_HOLIDAYS_USER, holidaysUser);
-
-    // ICS(=obj.holidays) とユーザー追加分を合体して運用値へ
-    holidays = Array.from(new Set([...(holidays||[]), ...holidaysUser])).sort();
-    save(KEY_HOLIDAYS, holidays);
-
-    autosavePaused = false; 
-    render();
-  }
-
-  _q("cloudSave").onclick = async ()=>{
-    try{
-      const { data:{ user } } = await sb.auth.getUser();
-      if(!user) throw new Error("未ログイン");
-      syncSetMsg("アップロード中…");
-      const payload = packAll();
-      const { error } = await sb.from("app_states").upsert({ user_id:user.id, payload, updated_at:new Date().toISOString() });
-      if(error) throw error;
-      syncSetMsg("クラウド保存しました ✅");
-    }catch(e){ syncSetMsg("保存失敗: "+e.message); }
-  };
-
-  _q("cloudLoad").onclick = async ()=>{
-    try{
-      const { data:{ user } } = await sb.auth.getUser();
-      if(!user) throw new Error("未ログイン");
-      syncSetMsg("ダウンロード中…");
-      const { data, error } = await sb.from("app_states").select("payload, updated_at").eq("user_id", user.id).maybeSingle();
-      if(error) throw error;
-      if(!data){ syncSetMsg("サーバー上のデータがありません"); return; }
-      unpackAll(data.payload);
-      syncSetMsg("クラウド読込OK ✅");
-    }catch(e){ syncSetMsg("読込失敗: "+e.message); }
-  };
-
-  refreshSyncUI();
-  sb.auth.onAuthStateChange(()=>refreshSyncUI());
-
-  async function refreshSyncUI(){
-    const { data:{ session } } = await sb.auth.getSession();
-    const user = session?.user || null;
-    _q("authArea").style.display = user ? "none" : "block";
-    _q("syncArea").style.display = user ? "flex" : "none";
-    _q("sWho").textContent = user?.email || "";
-
-    setTimeout(async ()=>{
-      const { data:{ session } } = await sb.auth.getSession();
-      const user2 = session?.user || null;
-      _q("authArea").style.display = user2 ? "none" : "block";
-      _q("syncArea").style.display = user2 ? "flex" : "none";
-      _q("sWho").textContent = user2?.email || "";
-    }, 120);
-
-    // ←← ここを追加
-    const pwPanel = document.getElementById("pwResetPanel");
-    if (user && pwPanel) {
-      pwPanel.remove();
-      if (/type=recovery|pw-reset/i.test(location.hash)) {
-        history.replaceState(null, "", location.pathname);
-      }
-    }
-  }
-
-
-
-})();  
-
-</script>
-
-<script>
-/* utils */
-const $ = s=>document.querySelector(s);
-const fmtJPY = n=>'¥'+Number(n||0).toLocaleString('ja-JP');
-const pad2 = n=>String(n).padStart(2,'0');
-const yyyymm = d=>`${d.getFullYear()}-${pad2(d.getMonth()+1)}`;
-const ymd = d=>`${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
-
-/* ==== mock today (UIなし・配布用) ==== */
-const MOCK_KEY = 'cb_mock_today_v1';
-const readMock = ()=> {
-  const s = (localStorage.getItem(MOCK_KEY)||'').trim();
-  return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : null;
-};
-// アプリ共通の「今」
-const now = ()=> {
-  const s = readMock();
-  return s ? new Date(s+'T12:00:00') : new Date();
-};
-// 今日の日付文字列
-const todayStr = ()=> ymd(now());
-/* ==== /mock today ==== */
-
-// ?mock=YYYY-MM-DD でテスト日をセット（UIなし運用）
-(function(){
-  const m = location.search.match(/[?&]mock=(\d{4}-\d{2}-\d{2})/);
-  if (m) localStorage.setItem(MOCK_KEY, m[1]);
-})();
-
-const toHalf = s => s.replace(/[！-～]/g, ch => String.fromCharCode(ch.charCodeAt(0)-0xFEE0));
-const toNumber = s => { if (s==null) return NaN; s = toHalf(String(s)).replace(/[^\d.\-]/g,''); if (s===''||s==='-'||s==='.'||s==='-.') return NaN; return Number(s); };
-const uuid = ()=> ('u_'+Date.now().toString(36)+Math.random().toString(36).slice(2));
-const clampDay = (y,m,day)=> { const last=new Date(y,m,0).getDate(); return Math.min(Math.max(1, day|0), last); };
-const isWeekend = d => d.getDay()===0 || d.getDay()===6;
-const startOfDay = d => { const x=new Date(d); x.setHours(0,0,0,0); return x; };
-const endOfDay   = d => { const x=new Date(d); x.setHours(23,59,59,999); return x; };
-const daysBetween = (a,b)=> Math.floor((startOfDay(b)-startOfDay(a))/86400000);
-
-/* storage keys */
-const KEYS = { CARDS:'cb_cards_local_v1', ENTRIES:'cb_entries_local_v1' };
-const KEYS_TPL = { LIST:'cb_templates_v1' }; // APPLIEDフラグ撤廃
-const KEY_PAYDAY = 'cb_payday_base_v1';
-const KEY_ADJ_WK = 'cb_adjust_weekends_v1';
-const KEY_HOLIDAYS = 'cb_holidays_v1';
-const KEY_HOLIDAYS_LAST = 'cb_holidays_last_updated';
-const KEY_HOLIDAYS_USER = 'cb_holidays_user_extra_v1';
-
-const load=(k,fb)=>{ try{ return JSON.parse(localStorage.getItem(k)) ?? fb }catch{ return fb } };
-
-let autosavePaused = false;
-
-const save=(k,v)=>{
-  try{
-    localStorage.setItem(k, JSON.stringify(v));
-    if (!autosavePaused && typeof window.markDirty === 'function') window.markDirty(); // クラウド自動保存トリガ
-    tick('保存しました');
-  }catch(e){
-    tick('保存失敗');
-  }
-};
-
-function saveSilent(k, v){
-  try{
-    autosavePaused = true;        // autosave だけ抑止
-    localStorage.setItem(k, JSON.stringify(v));
-  } finally {
-    autosavePaused = false;
-  }
-}
-
-/* state */
-let cards = load(KEYS.CARDS, []);
-let entries = load(KEYS.ENTRIES, {});
-let templates = load(KEYS_TPL.LIST, []);
-let editingRef = null;
-let legacyCycle = load('cb_cycle_start_day_v1', null);
-let paydayBase = load(KEY_PAYDAY, legacyCycle!=null ? legacyCycle : 1);
-let adjustWeekends = load(KEY_ADJ_WK, true);
-let holidays = load(KEY_HOLIDAYS, []);
-
-// ▼▼▼ ここから追加：祝日ICSを自動取得して holidays を更新 ▼▼▼
-
-async function autoUpdateJapanHolidays() {
-  try {
-    // 直近7日以内ならスキップ
-    const last = Number(localStorage.getItem(KEY_HOLIDAYS_LAST) || 0);
-    if (Date.now() - last < 7*24*60*60*1000) {
-      console.log("祝日更新スキップ（7日以内）");
+  <!-- Supabase（UMD版） -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script>
+  (async () => {
+    // ライブラリ読み込み確認
+    if (!window.supabase || !window.supabase.createClient) {
+      const msg = "Supabaseライブラリの読込に失敗しました。ネットワークや広告ブロッカーを確認してください。";
+      console.warn(msg);
+      const m = document.getElementById("syncMsg");
+      if (m) m.textContent = msg;
+      ["sSignup","sLogin","sLogout","sResetPw"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.onclick = () => alert(msg);
+      });
       return;
     }
 
-    // GitHub Pages 等の静的配信では CORS で失敗するため、いったんスキップ
-    if (location.hostname.endsWith("github.io")) {
-    console.log("祝日更新をスキップ（CORS回避）。必要なら Edge Function/JSON に切替えてください。");
-    localStorage.setItem(KEY_HOLIDAYS_LAST, String(Date.now())); // 次回まで抑止
-    return;
+    // あなたの Supabase 値
+    const SUPABASE_URL = "https://jwetmkoemtzonzvcsawn.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3ZXRta29lbXR6b256dmNzYXduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzNzgwMzcsImV4cCI6MjA3Mzk1NDAzN30.Llt8iNr9dx3PmR6jInNlGSZnI3zIln4LLyR1dge7fN0";
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ====== サイレント自動保存 ======
+    let dirty = false;
+    let autosaveTimer = null;
+
+    async function currentUser() {
+      const { data:{ user } } = await sb.auth.getUser();
+      return user || null;
     }
+    async function cloudSaveSilent() {
+      const user = await currentUser();
+      if (!user) return;
+      const payload = packAll();
+      try {
+        await sb.from("app_states").upsert({
+          user_id: user.id,
+          payload,
+          updated_at: new Date().toISOString()
+        });
+        dirty = false;
+      } catch (_) {}
+    }
+    function markDirty() {
+      dirty = true;
+      if (autosaveTimer) return;
+      autosaveTimer = setTimeout(async () => {
+        autosaveTimer = null;
+        if (dirty) await cloudSaveSilent();
+      }, 5000);
+    }
+    window.markDirty = markDirty;
 
-    const url = "https://calendar.google.com/calendar/ical/ja.japanese%23holiday%40group.v.calendar.google.com/public/basic.ics";
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) throw new Error("祝日カレンダー取得失敗");
-    const text = await res.text();
+    async function flushBeforeHide() {
+      if (!dirty) return;
+      try { await cloudSaveSilent(); } catch(_) {}
+      if (dirty) {
+        const user = await currentUser();
+        if (!user) return;
+        const url = `${SUPABASE_URL}/rest/v1/app_states?on_conflict=user_id`;
+        const body = JSON.stringify({
+          user_id: user.id,
+          payload: packAll(),
+          updated_at: new Date().toISOString()
+        });
+        fetch(url, {
+          method: "POST",
+          headers: {
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+            "Content-Type": "application/json",
+            "Prefer": "resolution=merge-duplicates"
+          },
+          body,
+          keepalive: true
+        });
+        dirty = false;
+      }
+    }
+    document.addEventListener("visibilitychange", () => { if (document.hidden) flushBeforeHide(); });
+    window.addEventListener("pagehide", flushBeforeHide);
 
-    const dates = [];
-    text.split("BEGIN:VEVENT").slice(1).forEach(block => {
-      const m = block.match(/DTSTART;?VALUE=DATE:(\d{8})/);
-      if (m) dates.push(`${m[1].slice(0,4)}-${m[1].slice(4,6)}-${m[1].slice(6,8)}`);
+    const _q = (id)=>document.getElementById(id);
+    function on(id, handler) {
+      const el = _q(id);
+      if (!el) return;
+      el.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); handler(e); }, { passive:false });
+      el.addEventListener('keydown', (e)=>{ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handler(e); }});
+    }
+    function syncSetMsg(m){ _q("syncMsg").textContent = m || ""; }
+
+    on("sSignup", async ()=> {
+      const { error } = await sb.auth.signUp({ email:_q("sEmail").value, password:_q("sPw").value });
+      syncSetMsg(error ? "登録失敗: "+error.message : "登録OK。続けてログインしてください。");
+      refreshSyncUI();
     });
-    const uniq = Array.from(new Set(dates)).sort();
 
-    const prev = load(KEY_HOLIDAYS, []);
-    const changed = JSON.stringify(prev) !== JSON.stringify(uniq);
-    if (changed) {
-      holidays = uniq;
-      saveSilent(KEY_HOLIDAYS, holidays);
-      render();
-      console.log(`祝日を自動更新: ${holidays.length} 件`);
-    } else {
-      console.log("祝日は最新です（更新なし）");
+    // ログイン（多重防止）
+    const sLoginEl = _q("sLogin");
+    let loginBusy = false;
+
+    async function handleLogin(e) {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
+      if (loginBusy) return;
+      loginBusy = true;
+      sLoginEl.disabled = true;
+      sLoginEl.setAttribute("aria-busy","true");
+
+      const email = (_q("sEmail").value || "").trim();
+      const password = _q("sPw").value || "";
+      if (!email || !password) {
+        syncSetMsg("メールとパスワードを入力してください");
+        loginBusy = false;
+        sLoginEl.disabled = false;
+        sLoginEl.removeAttribute("aria-busy");
+        return;
+      }
+
+      syncSetMsg("ログイン中…");
+      const loginPromise = sb.auth.signInWithPassword({ email, password });
+      const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 20000));
+
+      try {
+        const { data, error } = await Promise.race([loginPromise, timeout]);
+        if (error) {
+          syncSetMsg("ログイン失敗: " + error.message);
+        } else {
+          syncSetMsg("ログイン成功");
+          await refreshSyncUI();
+        }
+      } catch (err) {
+        const msg = String(err?.message || err);
+        if (msg.includes("timeout")) {
+          syncSetMsg("ログイン失敗: 応答がありません（回線・拡張機能・会社のネット制限を確認）");
+        } else if (msg.includes("CORS")) {
+          syncSetMsg("ログイン失敗: ブラウザが通信をブロック（URL設定を確認）");
+        } else if (msg.includes("ERR_BLOCKED_BY_CLIENT")) {
+          syncSetMsg("ログイン失敗: 拡張機能が通信を停止（アドブロック一時停止）");
+        } else {
+          syncSetMsg("ログイン失敗: " + msg);
+        }
+      } finally {
+        loginBusy = false;
+        sLoginEl.disabled = false;
+        sLoginEl.removeAttribute("aria-busy");
+      }
     }
 
-    // 成否にかかわらず成功時は記録
-    localStorage.setItem(KEY_HOLIDAYS_LAST, String(Date.now()));
-  } catch (e) {
-    console.warn("祝日自動更新エラー:", e);
-  }
-}
+    if (sLoginEl) {
+      sLoginEl.addEventListener("pointerup", handleLogin, { passive:false });
+      sLoginEl.addEventListener("click",      handleLogin, { passive:false });
+      sLoginEl.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") handleLogin(e); }, { passive:false });
+    }
+    ["sEmail","sPw"].forEach(id=>{ _q(id)?.addEventListener("keydown", e => { if (e.key === "Enter") handleLogin(e); }); });
 
-
-/* elements */
-const monthEl=$('#month'), periodRangeEl=$('#periodRange');
-const usedTotalEl=$('#usedTotal'), remainTotalEl=$('#remainTotal'), barTotalEl=$('#barTotal');
-const cardsSummaryEl=$('#cardsSummary'), cardSelectEl=$('#cardSelect'), filterCardEl=$('#filterCard');
-const dateEl=$('#date'), amountEl=$('#amount'), memoEl=$('#memo'), estimatedEl=$('#estimated');
-const listEl=$('#list'), sumFooterEl=$('#sumFooter'), statusEl=$('#status');
-const addBtn=$('#add'), updateBtn=$('#update'), cancelEditBtn=$('#cancelEdit'), clearFormBtn=$('#clearForm');
-const exportCsvBtn=$('#exportCsv'), backupBtn=$('#backup'), restoreInput=$('#restore'), gotoTodayBtn=$('#gotoToday');
-
-const manageCardsBtn=$('#manageCards'), cardModal=$('#cardModal'), closeCardModalBtn=$('#closeCardModal');
-const cardListEl=$('#cardList'), newCardNameEl=$('#newCardName'), newCardTargetEl=$('#newCardTarget'), resetTargetsBtn=$('#resetTargets');
-
-const manageTemplatesBtn=$('#manageTemplates'), tplModal=$('#tplModal'), closeTplModalBtn=$('#closeTplModal');
-const tplListEl=$('#tplList'), tplCardEl=$('#tplCard'), tplDayEl=$('#tplDay'), tplAmountEl=$('#tplAmount'), tplMemoEl=$('#tplMemo'), tplEstEl=$('#tplEst');
-const tplStatusEl=$('#tplStatus');
-
-const settingsModal=$('#settingsModal'), openSettingsBtn=$('#openSettings'), closeSettingsBtn=$('#closeSettings');
-const paydayInput=$('#paydayInput'), adjWeekendsEl=$('#adjWeekends'), holidaysInput=$('#holidaysInput');
-const saveSettingsBtn=$('#saveSettings');
-
-/* payday counter elements */
-const pdEtaEl = $('#pdEta'), pdBarEl = $('#pdBar'), pdRangeEl = $('#pdRange');
-const pdBadgeBase = $('#pdBadgeBase'), pdBadgePrev = $('#pdBadgePrev'), pdBadgeThis = $('#pdBadgeThis'), pdBadgeDays = $('#pdBadgeDays'), pdBadgePct = $('#pdBadgePct');
-
-/* helpers */
-const tick = (m)=>{ statusEl.textContent=m; setTimeout(()=>statusEl.textContent='—',1200); };
-const ensureDefaultCard=()=>{ if(cards.length===0){ cards=[{id:uuid(),name:'メインカード',target:0}]; save(KEYS.CARDS,cards);} };
-const getMonthKey=()=> monthEl.value || yyyymm(now());
-const monthEntries=(key)=> entries[key] || [];
-const setMonthEntries=(key,arr)=>{ entries[key]=arr; save(KEYS.ENTRIES,entries); render(); };
-const totalTarget=()=> cards.reduce((s,c)=> s+(+c.target||0),0);
-
-/* business days and payday (templates are NOT adjusted) */
-function holidaySet(){ const set = new Set(); (holidays||[]).forEach(d=>{ if(typeof d==='string' && d.length>=10) set.add(d.slice(0,10)); }); return set; }
-function isHolidayDate(d, set){ return (adjustWeekends && isWeekend(d)) || set.has(ymd(d)); }
-function adjustedPayday(y, m){
-  const base = new Date(y, m-1, clampDay(y,m,paydayBase));
-  const set = holidaySet();
-  while(isHolidayDate(base, set)){ base.setDate(base.getDate()-1); }
-  return startOfDay(base);
-}
-
-/* period (end month anchored by next payday) */
-function periodOf(ym){
-  const [y,m]=ym.split('-').map(Number);
-  let py=y, pm=m-1; if(pm<1){ pm=12; py--; }
-  const start = adjustedPayday(py, pm);
-  const endExclusive = adjustedPayday(y, m);
-  const end = new Date(endExclusive.getTime()-86400000);
-  return {start, end, endExclusive};
-}
-function anchorForDate(d){
-  const y=d.getFullYear(), m=d.getMonth()+1;
-  const endExclusive = adjustedPayday(y, m);
-  if(startOfDay(d) >= endExclusive){
-    let nm=m+1, ny=y; if(nm>12){ nm=1; ny++; }
-    return `${ny}-${pad2(nm)}`;
-  }
-  return `${y}-${pad2(m)}`;
-}
-function updatePeriodLabel(){
-  const {start, end} = periodOf(getMonthKey());
-  const p2=n=>String(n).padStart(2,'0');
-  const f=d=>`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;
-  periodRangeEl.textContent = `期間: ${f(start)} 〜 ${f(end)}（ベース給料日: ${paydayBase}日／給料日は休業日なら前営業日に調整。定例は移動しません）`;
-}
-
-/* entries in period */
-function entriesForPeriod(ym){
-  const {start, end} = periodOf(ym);
-  const keys = new Set([ yyyymm(start), yyyymm(end) ]);
-  let rows = [];
-  keys.forEach(k=>{
-    (entries[k]||[]).forEach((r,idx)=>{
-      const d=new Date(r.date);
-      if(d>=start && d<=end) rows.push({...r, srcKey:k, srcIdx:idx});
+    on("sLogout", async ()=> {
+      try { await sb.auth.signOut(); } catch(_) {}
+      syncSetMsg("ログアウトしました");
+      setTimeout(refreshSyncUI, 50);
     });
-  });
-  rows.sort((a,b)=> (a.date||'').localeCompare(b.date||'') || (a.memo||'').localeCompare(b.memo||'')); 
-  return rows;
-}
-const sumByCardInPeriod=(ym,id)=> entriesForPeriod(ym).filter(r=>r.cardId===id).reduce((s,r)=>s+(+r.amount||0),0);
-const sumAllInPeriod=(ym)=> entriesForPeriod(ym).reduce((s,r)=>s+(+r.amount||0),0);
 
-/* templates (NO weekday adjustment) */
-function renderTplSelectorsFromCards(){ tplCardEl.innerHTML=''; cards.forEach(c=>{ const o=document.createElement('option'); o.value=c.id; o.textContent=c.name; tplCardEl.appendChild(o); }); }
-function renderTplList(){
-  tplListEl.innerHTML=''; templates.forEach(t=>{
-    const c = cards.find(x=>x.id===t.cardId);
-    const li=document.createElement('li');
-    li.style.cssText='padding:8px 0; border-top:1px solid #eef2ff; display:flex; gap:8px; align-items:center; flex-wrap:wrap;';
-    li.innerHTML = `<div class="sub">[${c?c.name:'—'}] 毎月${t.day}日 / ${fmtJPY(t.amount)} / ${t.memo||''} ${t.est?'<span class="chip">概算</span>':''}</div>
-                    <button data-del-tpl="${t.id}" class="btn ghost" type="button" style="height:auto; padding:6px 10px; font-size:12px">削除</button>`;
-    tplListEl.appendChild(li);
-  });
-}
-function dateInPeriodForTpl(ym, day){
-  const {start, end} = periodOf(ym);
-  const ay=end.getFullYear(), am=end.getMonth()+1;
-  const candA = new Date(ay, am-1, clampDay(ay, am, day));
-  if(candA>=start && candA<=end) return candA;
-  const sy=start.getFullYear(), sm=start.getMonth()+1;
-  const candS = new Date(sy, sm-1, clampDay(sy, sm, day));
-  if(candS>=start && candS<=end) return candS;
-  return end;
-}
+    on("sResetPw", async ()=> {
+      const email = (_q("sEmail").value || "").trim();
+      if (!email) { syncSetMsg("メールアドレスを入力してください"); return; }
+      const redirectTo = location.origin + location.pathname + "#pw-reset";
+      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+      syncSetMsg(error ? ("リセット送信失敗: " + error.message) : "リセット用メールを送信しました");
+    });
 
-/* 未来（当月を含む）だけ適用。完全に過去の期間は適用しない */
-function applyTemplatesForMonth(ym){
-  const { start, end } = periodOf(ym);
-  const today = startOfDay(now());
+    // パスワード再設定パネル
+    function ensurePwResetPanel() {
+      let panel = document.getElementById("pwResetPanel");
+      if (panel) return panel;
 
-  // ★ 修正点：期間の「終了日」が今日より前なら完全に過去なのでスキップ
-  if (end < today) return 0;
+      panel = document.createElement("div");
+      panel.id = "pwResetPanel";
+      panel.className = "card";
+      panel.style.marginTop = "8px";
+      panel.innerHTML = `
+        <div class="sub" style="margin-bottom:8px">新しいパスワードを入力してください</div>
+        <div class="row">
+          <input id="newPw1" type="password" placeholder="新パスワード">
+          <input id="newPw2" type="password" placeholder="新パスワード（確認）">
+          <button id="applyNewPw" class="btn" type="button">更新</button>
+          <button id="cancelNewPw" class="btn ghost" type="button">閉じる</button>
+        </div>
+        <div class="sub" id="pwResetMsg" style="margin-top:6px"></div>
+      `;
+      const authArea = document.getElementById("authArea");
+      authArea?.appendChild(panel);
 
-  const periodRows = entriesForPeriod(ym);
-  let added = 0;
+      const msg = (t)=> document.getElementById("pwResetMsg").textContent = t || "";
 
-  templates.forEach(t => {
-    const target = dateInPeriodForTpl(ym, t.day); // 平日調整なし
-    const dateStr = ymd(target);
+      document.getElementById("applyNewPw").onclick = async () => {
+        const a = (document.getElementById("newPw1").value || "");
+        const b = (document.getElementById("newPw2").value || "");
+        if (!a || a.length < 8) { msg("8文字以上を推奨します"); return; }
+        if (a !== b) { msg("確認用と一致しません"); return; }
+        try {
+          const { error } = await sb.auth.updateUser({ password: a });
+          if (error) msg("更新失敗: " + error.message);
+          else {
+            msg("パスワードを更新しました。ログインし直してください。");
+            panel.remove();
+            if (location.hash === "#pw-reset") history.replaceState(null, "", location.pathname);
+          }
+        } catch (e) {
+          msg("更新失敗: " + (e?.message || e));
+        }
+      };
 
-    const exists = periodRows.some(r =>
-      r.cardId === t.cardId &&
-      r.date   === dateStr &&
-      +r.amount === +t.amount &&
-      (r.memo || '') === (t.memo || '') &&
-      !!r.est === !!t.est
-    );
+      document.getElementById("cancelNewPw").onclick = () => {
+        panel.remove();
+        if (location.hash === "#pw-reset") history.replaceState(null, "", location.pathname);
+      };
 
-    if (!exists) {
-      const key = dateStr.slice(0,7);
-      const arr = monthEntries(key).slice();
-      // ★ tplId を入れて後で追跡＆削除できるように
-      arr.push({ cardId:t.cardId, tplId:t.id, date:dateStr, amount:+t.amount, memo:t.memo||'', est:!!t.est });
-      entries[key] = arr;
-      added++;
+      return panel;
     }
-  });
 
-  if (added > 0) { save(KEYS.ENTRIES, entries); render(); }
-  return added;
-}
+    sb.auth.onAuthStateChange(async (event) => {
+      if (event === "PASSWORD_RECOVERY") ensurePwResetPanel();
+    });
+    if (location.hash === "#pw-reset") ensurePwResetPanel();
+    if (location.hash && /type=recovery/i.test(location.hash)) ensurePwResetPanel();
 
-/* 先読み（前月・当月・翌月に適用を試みるが、apply内で過去は弾く） */
-function ymAdd(ym, delta){ const d = new Date(ym + '-01'); d.setMonth(d.getMonth() + delta); return yyyymm(d); }
-function preapplyNeighbors(ym){ [ymAdd(ym,-1), ym, ymAdd(ym,1)].forEach(k => applyTemplatesForMonth(k)); }
-
-/* payday counter */
-function currentPayPeriodForCounter(today=now()){
-  const y=today.getFullYear(), m=today.getMonth()+1;
-  const thisPay = adjustedPayday(y, m);
-  if(startOfDay(today) >= startOfDay(thisPay)){
-    const nm = m===12?1:m+1, ny = m===12?y+1:y;
-    return { prevPay: thisPay, thisPay: adjustedPayday(ny, nm) };
-  }else{
-    const pm = m===1?12:m-1, py = m===1?y-1:y;
-    return { prevPay: adjustedPayday(py, pm), thisPay };
-  }
-}
-function renderPaydayCounter(){
-  const { prevPay, thisPay } = currentPayPeriodForCounter(now());
-  const totalDays = Math.max(1, daysBetween(prevPay, thisPay));
-  const elapsed = Math.max(0, Math.min(totalDays, daysBetween(prevPay, now())));
-  const remaining = Math.max(0, totalDays - elapsed);
-  const pct = Math.round((elapsed/totalDays)*100);
-  const isToday = ymd(now()) === ymd(thisPay);
-
-  pdEtaEl.textContent = isToday ? '本日が給料日です！' : 'あと ' + remaining + ' 日';
-  pdEtaEl.classList.toggle('ok', isToday);
-  pdBarEl.style.width = pct + '%';
-  pdBarEl.style.background = remaining<=3 ? (remaining===0?'var(--ok)':'var(--warn2)') : 'var(--accent)';
-
-  const f = d => d.getFullYear() + '/' + (d.getMonth()+1) + '/' + d.getDate();
-  pdRangeEl.textContent = '期間：' + f(prevPay) + ' 〜 ' + f(thisPay) + '（全' + totalDays + '日・進捗' + pct + '%）';
-
-  pdBadgeBase.textContent = 'ベース: ' + paydayBase + '日';
-  pdBadgePrev.textContent = '前回: ' + f(prevPay);
-  pdBadgeThis.textContent = '今回: ' + f(thisPay);
-  pdBadgeDays.textContent = '全: ' + totalDays + '日';
-  pdBadgePct.textContent = '進捗: ' + pct + '%';
-}
-
-/* render */
-function renderCardsSummary(){
-  const ym = getMonthKey(); cardsSummaryEl.innerHTML='';
-  cards.forEach(c=>{
-    const used = sumByCardInPeriod(ym, c.id);
-    const tgt = +c.target||0;
-    const remain = Math.max(tgt-used,0);
-    const pct = tgt>0 ? Math.min(Math.round(used/tgt*100),100) : 0;
-    const d=document.createElement('div'); d.className='card';
-    d.innerHTML=`
-      <div class="row" style="align-items:center">
-        <div style="font-weight:600">${c.name}</div>
-        <span class="sub" style="margin-left:auto">目標: <b>${fmtJPY(tgt)}</b> / 使用: <b>${fmtJPY(used)}</b> / 残り: <b>${tgt?fmtJPY(remain):'目標未設定'}</b></span>
-        <button data-edit-card="${c.id}" class="btn ghost" type="button" style="height:auto; padding:6px 10px; font-size:12px">編集</button>
-        <button data-del-card="${c.id}" class="btn ghost" type="button" style="height:auto; padding:6px 10px; font-size:12px">削除</button>
-      </div>
-      <div class="bar" style="margin-top:8px"><div style="width:${pct}%; background:${used>tgt?'var(--warn)':'var(--accent)'}"></div></div>`;
-    cardsSummaryEl.appendChild(d);
-  });
-}
-function renderTopSummary(){
-  const ym = getMonthKey();
-  const used = sumAllInPeriod(ym);
-  const tgt = totalTarget();
-  usedTotalEl.textContent = fmtJPY(used);
-  sumFooterEl.textContent = fmtJPY(used);
-  if(tgt>0){
-    const remain = Math.max(tgt-used,0);
-    remainTotalEl.textContent = fmtJPY(remain);
-    const pct = Math.min(Math.round(used/tgt*100),100);
-    barTotalEl.style.width = pct+'%';
-    barTotalEl.style.background = (used>tgt?'var(--warn)':'var(--accent)');
-  }else{
-    remainTotalEl.textContent = '目標未設定';
-    barTotalEl.style.width='0%'; barTotalEl.style.background='var(--accent)';
-  }
-  updatePeriodLabel();
-}
-function renderCardSelectors(){
-  cardSelectEl.innerHTML=''; cards.forEach(c=>{ const o=document.createElement('option'); o.value=c.id; o.textContent=c.name; cardSelectEl.appendChild(o); });
-  const cur=filterCardEl.value; filterCardEl.innerHTML='<option value="">（すべてのカード）</option>';
-  cards.forEach(c=>{ const o=document.createElement('option'); o.value=c.id; o.textContent=c.name; filterCardEl.appendChild(o); });
-  if(cur && cards.some(c=>c.id===cur)) filterCardEl.value=cur;
-}
-function renderList(){
-  const ym = getMonthKey();
-  const filter = filterCardEl.value;
-  const rows = entriesForPeriod(ym).filter(r=>!filter || r.cardId===filter);
-  listEl.innerHTML='';
-  rows.forEach(r=>{
-    const card=cards.find(c=>c.id===r.cardId); const badge=r.est?'<span class="chip">概算</span>':'';
-    const li=document.createElement('li');
-    li.innerHTML=`<div class="date">${r.date||''}</div>
-      <div class="amt">${fmtJPY(r.amount||0)} ${badge}</div>
-      <div style="font-size:12px; color:var(--muted); flex:1">カード: ${card?card.name:'—'} ／ ${r.memo||''}</div>
-      <div style="display:flex; gap:6px">
-        <button data-edit='${r.srcKey}:${r.srcIdx}' class="btn ghost" type="button" style="height:auto; padding:6px 10px; font-size:12px">編集</button>
-        <button data-del='${r.srcKey}:${r.srcIdx}' class="btn ghost" type="button" style="height:auto; padding:6px 10px; font-size:12px">削除</button>
-      </div>`;
-    listEl.appendChild(li);
-  });
-}
-function render(){
-  ensureDefaultCard();
-  renderTopSummary(); renderCardsSummary(); renderCardSelectors(); renderList();
-  renderPaydayCounter();
-  addBtn.classList.remove('hidden'); updateBtn.classList.add('hidden'); cancelEditBtn.classList.add('hidden');
-}
-
-/* init */
-(function init(){
-  if(legacyCycle!=null){ try{ localStorage.removeItem('cb_cycle_start_day_v1'); }catch{} }
-  monthEl.value = anchorForDate(now());
-  dateEl.value = todayStr();
-  ensureDefaultCard();
-  applyTemplatesForMonth(getMonthKey()); // 当月以降のみ適用
-  render();
-  preapplyNeighbors(getMonthKey());      // 前後月も（apply内で過去は弾く）
-  setInterval(()=> renderPaydayCounter(), 3600*1000);
-
-// ★起動時：自動更新 → ユーザー追加分と合体 → 反映
-  autoUpdateJapanHolidays().finally(()=>{
-    const ics = load(KEY_HOLIDAYS, []);
-    const userExtra = load(KEY_HOLIDAYS_USER, []);
-    holidays = Array.from(new Set([...ics, ...userExtra])).sort();
-    saveSilent(KEY_HOLIDAYS, holidays);  // ローカルの運用値を確定（無音）
-    render();
-  });
-
-})();
-
-/* events: month nav */
-monthEl.addEventListener('change', ()=>{
-  editingRef=null;
-  applyTemplatesForMonth(getMonthKey());
-  preapplyNeighbors(getMonthKey());
-  render();
-});
-filterCardEl.addEventListener('change', ()=> render());
-$('#prevMonth').addEventListener('click', ()=>{
-  const d = new Date((getMonthKey()) + "-01"); d.setMonth(d.getMonth()-1);
-  monthEl.value = yyyymm(d);
-  applyTemplatesForMonth(getMonthKey());
-  preapplyNeighbors(getMonthKey());
-  render();
-});
-$('#nextMonth').addEventListener('click', ()=>{
-  const d = new Date((getMonthKey()) + "-01"); d.setMonth(d.getMonth()+1);
-  monthEl.value = yyyymm(d);
-  applyTemplatesForMonth(getMonthKey());
-  preapplyNeighbors(getMonthKey());
-  render();
-});
-gotoTodayBtn.addEventListener('click', ()=>{
-  monthEl.value=anchorForDate(now());
-  applyTemplatesForMonth(getMonthKey());
-  preapplyNeighbors(getMonthKey());
-  render();
-});
-
-/* cards summary edit/delete (event delegation) */
-cardsSummaryEl.addEventListener('click', function(e) {
-  var editBtn = e.target.closest('button[data-edit-card]');
-  var delBtn  = e.target.closest('button[data-del-card]');
-
-  if (editBtn) {
-    var id = editBtn.dataset.editCard;
-    renderCardModal();
-    cardModal.classList.add('show');
-    setTimeout(function(){
-      var nameInput = cardListEl.querySelector('input[data-card-name="' + id + '"]');
-      if (nameInput) { nameInput.focus(); nameInput.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
-    }, 0);
-    return;
-  }
-
-  if (delBtn) {
-    var id2 = delBtn.dataset.delCard;
-    var card = cards.find(function(c){ return c.id === id2; });
-    if (!card) return;
-    if (!confirm('カード「' + card.name + '」を削除しますか？\n※明細は残ります（カードのみ削除）')) return;
-
-    cards = cards.filter(function(c){ return c.id !== id2; });
-    save(KEYS.CARDS, cards);
-
-    if (!cards.some(function(c){ return c.id === (cardSelectEl.value || ''); })) {
-      if (cards[0]) cardSelectEl.value = cards[0].id;
+    // pack/unpack
+    function packAll(){
+      try{
+        return {
+          cards, entries, templates,
+          paydayBase, adjustWeekends,
+          holidays,
+          holidaysUser: load(KEY_HOLIDAYS_USER, [])
+        };
+      }catch(e){ return null; }
     }
-    render();
-    tick('カードを削除しました');
-  }
-});
+    function unpackAll(obj){
+      if(!obj) return;
+      autosavePaused = true;
+      if(Array.isArray(obj.cards)) cards=obj.cards;
+      if(obj.entries && typeof obj.entries==="object") entries=obj.entries;
+      if(Array.isArray(obj.templates)) templates=obj.templates;
+      if(typeof obj.paydayBase==="number") paydayBase=obj.paydayBase|0;
+      if(typeof obj.adjustWeekends==="boolean") adjustWeekends=obj.adjustWeekends;
 
-/* add entry */
-addBtn.addEventListener('click', ()=>{
-  const cardId = cardSelectEl.value || (cards[0]&&cards[0].id);
-  let d = dateEl.value || todayStr();
-  const a = toNumber((amountEl.value||'').trim());
-  const me = (memoEl.value||'').trim();
-  const est = !!estimatedEl.checked;
-  if(!cardId){ tick('カードがありません'); return; }
-  if(!Number.isFinite(a) || a<=0){ tick('金額を数値で'); return; }
-  const key = d.slice(0,7);
-  const rows = monthEntries(key).slice();
-  rows.push({ cardId, date:d, amount:a, memo:me, est });
-  setMonthEntries(key, rows);
-  amountEl.value=''; memoEl.value=''; estimatedEl.checked=false;
-});
-
-/* list edit/delete */
-listEl.addEventListener('click', (e)=>{
-  const editBtn=e.target.closest('button[data-edit]'); const delBtn=e.target.closest('button[data-del]');
-  if(editBtn){
-    const [srcKey, srcIdx] = editBtn.dataset.edit.split(':');
-    const rows = monthEntries(srcKey);
-    const r = rows[+srcIdx]; if(!r) return;
-    editingRef = {srcKey, srcIdx:+srcIdx};
-    cardSelectEl.value = r.cardId;
-    dateEl.value = r.date || todayStr();
-    amountEl.value = r.amount || '';
-    memoEl.value = r.memo || '';
-    estimatedEl.checked = !!r.est;
-    addBtn.classList.add('hidden'); updateBtn.classList.remove('hidden'); cancelEditBtn.classList.remove('hidden');
-    return;
-  }
-  if(delBtn){
-    const [srcKey, srcIdx] = delBtn.dataset.del.split(':');
-    const rows = monthEntries(srcKey).slice();
-    rows.splice(+srcIdx,1);
-    setMonthEntries(srcKey, rows);
-  }
-});
-updateBtn.addEventListener('click', ()=>{
-  if(!editingRef) return;
-  const oldKey = editingRef.srcKey, oldIdx = editingRef.srcIdx;
-  const rowsOld = monthEntries(oldKey).slice();
-  if(!rowsOld[oldIdx]) return;
-
-  const cardId = cardSelectEl.value || (cards[0]&&cards[0].id);
-  let d = dateEl.value || todayStr();
-  const a = toNumber((amountEl.value||'').trim());
-  const me = (memoEl.value||'').trim();
-  const est = !!estimatedEl.checked;
-  if(!Number.isFinite(a) || a<=0){ tick('金額を数値で'); return; }
-
-  const newRow = { cardId, date:d, amount:a, memo:me, est };
-  const newKey = d.slice(0,7);
-  if(newKey === oldKey){
-    rowsOld[oldIdx] = newRow; setMonthEntries(oldKey, rowsOld);
-  }else{
-    rowsOld.splice(oldIdx,1); setMonthEntries(oldKey, rowsOld);
-    const rowsNew = monthEntries(newKey).slice(); rowsNew.push(newRow); setMonthEntries(newKey, rowsNew);
-  }
-  editingRef=null; amountEl.value=''; memoEl.value=''; estimatedEl.checked=false;
-  addBtn.classList.remove('hidden'); updateBtn.classList.add('hidden'); cancelEditBtn.classList.add('hidden');
-});
-cancelEditBtn.addEventListener('click', ()=>{ editingRef=null; amountEl.value=''; memoEl.value=''; estimatedEl.checked=false; dateEl.value=todayStr(); addBtn.classList.remove('hidden'); updateBtn.classList.add('hidden'); cancelEditBtn.classList.add('hidden'); });
-clearFormBtn.addEventListener('click', ()=>{ amountEl.value=''; memoEl.value=''; estimatedEl.checked=false; if(!dateEl.value) dateEl.value=todayStr(); });
-
-/* csv/backup/restore */
-exportCsvBtn.addEventListener('click', ()=>{
-  const ym = getMonthKey();
-  const rows = entriesForPeriod(ym);
-  const csv = ['date,card,amount,memo,estimated'].concat(rows.map(r=>{
-    const c=cards.find(x=>x.id===r.cardId); const memo=(r.memo||'').replaceAll('"','""');
-    return `${r.date},"${c?c.name:''}",${r.amount},"${memo}",${r.est?1:0}`;
-  })).join('\n');
-  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`${ym}-payday${paydayBase}.csv`; a.click(); URL.revokeObjectURL(a.href);
-});
-backupBtn.addEventListener('click', ()=>{
-  const data={
-    cards, entries, templates,
-    paydayBase, adjustWeekends,
-    holidays,                                  // 合体後
-    holidaysUser: load(KEY_HOLIDAYS_USER, [])  // ★追加
-  };
-
-  const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`cardBudget-backup-${Date.now()}.json`; a.click(); URL.revokeObjectURL(a.href);
-});
-restoreInput.addEventListener('change', (e)=>{
-  const f=e.target.files?.[0]; if(!f) return;
-  const r=new FileReader();
-  r.onload=()=>{ try{
-    const o=JSON.parse(r.result);
-    if(o && typeof o==='object'){
-      if(Array.isArray(o.cards)) cards=o.cards;
-      if(o.entries && typeof o.entries==='object') entries=o.entries;
-      if(Array.isArray(o.templates)) templates=o.templates;
-      if(typeof o.paydayBase==='number') paydayBase = Math.min(Math.max(1, o.paydayBase|0), 31);
-      if(typeof o.adjustWeekends==='boolean') adjustWeekends = o.adjustWeekends;
-
-      let holidaysUser = load(KEY_HOLIDAYS_USER, []);
-      if(Array.isArray(o.holidays)) holidays = o.holidays.filter(s=>typeof s==='string');
-      if(Array.isArray(o.holidaysUser)) holidaysUser = o.holidaysUser.filter(s=>typeof s==='string');
+      if(Array.isArray(obj.holidays)) holidays = obj.holidays;
+      const holidaysUser = Array.isArray(obj.holidaysUser) ? obj.holidaysUser : load(KEY_HOLIDAYS_USER, []);
 
       save(KEYS.CARDS,cards); save(KEYS.ENTRIES,entries); save(KEYS_TPL.LIST,templates);
-      save(KEY_PAYDAY, paydayBase); save(KEY_ADJ_WK, adjustWeekends);
+      save(KEY_PAYDAY,paydayBase); save(KEY_ADJ_WK,adjustWeekends);
       saveSilent(KEY_HOLIDAYS_USER, holidaysUser);
 
-      // 合体して運用値に
       holidays = Array.from(new Set([...(holidays||[]), ...holidaysUser])).sort();
       save(KEY_HOLIDAYS, holidays);
 
+      autosavePaused = false;
       render();
-
     }
-  }catch{ tick('復元に失敗'); } };
-  r.readAsText(f);
-});
 
-/* card modal */
-function renderCardModal(){
-  cardListEl.innerHTML=''; const ym=getMonthKey();
-  cards.forEach(c=>{
-    const li=document.createElement('li'); li.style.cssText='padding:8px 0; display:flex; gap:8px; align-items:center;';
-    li.innerHTML=`<input data-card-name="${c.id}" style="flex:1 1 auto; padding:8px 10px; border:1px solid var(--border); border-radius:10px" value="${c.name}">
-      <input data-card-target="${c.id}" style="width:140px; padding:8px 10px; border:1px solid var(--border); border-radius:10px" value="${c.target}" inputmode="numeric">
-      <span class="sub">使用: ${fmtJPY(sumByCardInPeriod(ym,c.id))}</span>`;
-    cardListEl.appendChild(li);
-  });
-}
-manageCardsBtn.addEventListener('click', ()=>{ renderCardModal(); cardModal.classList.add('show'); });
-closeCardModalBtn.addEventListener('click', ()=> cardModal.classList.remove('show'));
-cardModal.addEventListener('click', (e)=>{ if(e.target===cardModal) cardModal.classList.remove('show'); });
-cardListEl.addEventListener('input', (e)=>{
-  const nameEl=e.target.closest('input[data-card-name]'); const tgtEl=e.target.closest('input[data-card-target]');
-  if(nameEl){ const id=nameEl.dataset.cardName; const c=cards.find(x=>x.id===id); if(!c) return; c.name=nameEl.value; save(KEYS.CARDS,cards); renderCardSelectors(); renderCardsSummary(); renderList(); }
-  else if(tgtEl){ const id=tgtEl.dataset.cardTarget; const c=cards.find(x=>x.id===id); if(!c) return; c.target=toNumber(tgtEl.value); save(KEYS.CARDS,cards); renderTopSummary(); renderCardsSummary(); }
-});
+    _q("cloudSave").onclick = async ()=>{
+      try{
+        const { data:{ user } } = await sb.auth.getUser();
+        if(!user) throw new Error("未ログイン");
+        syncSetMsg("アップロード中…");
+        const payload = packAll();
+        const { error } = await sb.from("app_states").upsert({ user_id:user.id, payload, updated_at:new Date().toISOString() });
+        if(error) throw error;
+        syncSetMsg("クラウド保存しました ✅");
+      }catch(e){ syncSetMsg("保存失敗: "+e.message); }
+    };
 
-/* add card */
-$('#addCard').addEventListener('click', function () {
-  const name = (newCardNameEl.value || '').trim();
-  const tgt  = toNumber(newCardTargetEl.value || '');
-  if (!name) { tick('カード名を入れてください'); return; }
-  if (!Number.isFinite(tgt) || tgt < 0) { tick('目標額は0以上の数値で'); return; }
+    _q("cloudLoad").onclick = async ()=>{
+      try{
+        const { data:{ user } } = await sb.auth.getUser();
+        if(!user) throw new Error("未ログイン");
+        syncSetMsg("ダウンロード中…");
+        const { data, error } = await sb.from("app_states").select("payload, updated_at").eq("user_id", user.id).maybeSingle();
+        if(error) throw error;
+        if(!data){ syncSetMsg("サーバー上のデータがありません"); return; }
+        unpackAll(data.payload);
+        syncSetMsg("クラウド読込OK ✅");
+      }catch(e){ syncSetMsg("読込失敗: "+e.message); }
+    };
 
-  const id = uuid();
-  cards.push({ id, name, target: +tgt });
-  save(KEYS.CARDS, cards);
+    refreshSyncUI();
+    sb.auth.onAuthStateChange(()=>refreshSyncUI());
 
-  newCardNameEl.value = '';
-  newCardTargetEl.value = '';
+    async function refreshSyncUI(){
+      const { data:{ session } } = await sb.auth.getSession();
+      const user = session?.user || null;
+      _q("authArea").style.display = user ? "none" : "block";
+      _q("syncArea").style.display = user ? "flex" : "none";
+      _q("sWho").textContent = user?.email || "";
 
-  renderCardModal();
-  renderCardSelectors();
-  renderCardsSummary();
-  renderList();
-  try { cardSelectEl.value = id; } catch(_) {}
-  renderTplSelectorsFromCards();
+      setTimeout(async ()=>{
+        const { data:{ session } } = await sb.auth.getSession();
+        const user2 = session?.user || null;
+        _q("authArea").style.display = user2 ? "none" : "block";
+        _q("syncArea").style.display = user2 ? "flex" : "none";
+        _q("sWho").textContent = user2?.email || "";
+      }, 120);
 
-  tick('カードを追加しました');
-});
+      const pwPanel = document.getElementById("pwResetPanel");
+      if (user && pwPanel) {
+        pwPanel.remove();
+        if (/type=recovery|pw-reset/i.test(location.hash)) {
+          history.replaceState(null, "", location.pathname);
+        }
+      }
+    }
+  })();
+  </script>
 
-/* template modal events */
-manageTemplatesBtn.addEventListener('click', ()=>{ renderTplSelectorsFromCards(); renderTplList(); tplModal.classList.add('show'); });
-closeTplModalBtn.addEventListener('click', ()=> tplModal.classList.remove('show'));
-tplModal.addEventListener('click', (e)=>{ if(e.target===tplModal) tplModal.classList.remove('show'); });
+  <script>
+  /* utils */
+  const $ = s=>document.querySelector(s);
+  const fmtJPY = n=>'¥'+Number(n||0).toLocaleString('ja-JP');
+  const pad2 = n=>String(n).padStart(2,'0');
+  const yyyymm = d=>`${d.getFullYear()}-${pad2(d.getMonth()+1)}`;
+  const ymd = d=>`${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
 
-/* add template & apply + preapply neighbors（未来のみ） */
-$('#addTpl').addEventListener('click', function(){
-  var cardId = tplCardEl.value;
-  var day = toNumber(tplDayEl.value || '');
-  var amount = toNumber(tplAmountEl.value || '');
-  var memo = (tplMemoEl.value || '').trim();
-  var est = !!tplEstEl.checked;
+  /* ==== mock today (UIなし・配布用) ==== */
+  const MOCK_KEY = 'cb_mock_today_v1';
+  const readMock = ()=> {
+    const s = (localStorage.getItem(MOCK_KEY)||'').trim();
+    return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : null;
+  };
+  // アプリ共通の「今」
+  const now = ()=> {
+    const s = readMock();
+    return s ? new Date(s+'T12:00:00') : new Date();
+  };
+  // 今日
+  const todayStr = ()=> ymd(now());
+  // ?mock=YYYY-MM-DD でセット
+  (function(){
+    const m = location.search.match(/[?&]mock=(\d{4}-\d{2}-\d{2})/);
+    if (m) localStorage.setItem(MOCK_KEY, m[1]);
+  })();
 
-  if (!cardId) { tplStatusEl.textContent = 'カード未選択'; return; }
-  if (!Number.isFinite(day) || day < 1 || day > 31) { tplStatusEl.textContent = '日付は1-31で'; return; }
-  if (!Number.isFinite(amount) || amount <= 0) { tplStatusEl.textContent = '金額を数値で'; return; }
+  const toHalf = s => s.replace(/[！-～]/g, ch => String.fromCharCode(ch.charCodeAt(0)-0xFEE0));
+  const toNumber = s => { if (s==null) return NaN; s = toHalf(String(s)).replace(/[^\d.\-]/g,''); if (s===''||s==='-'||s==='.'||s==='-.') return NaN; return Number(s); };
+  const uuid = ()=> ('u_'+Date.now().toString(36)+Math.random().toString(36).slice(2));
+  const clampDay = (y,m,day)=> { const last=new Date(y,m,0).getDate(); return Math.min(Math.max(1, day|0), last); };
+  const isWeekend = d => d.getDay()===0 || d.getDay()===6;
+  const startOfDay = d => { const x=new Date(d); x.setHours(0,0,0,0); return x; };
+  const endOfDay   = d => { const x=new Date(d); x.setHours(23,59,59,999); return x; };
+  const daysBetween = (a,b)=> Math.floor((startOfDay(b)-startOfDay(a))/86400000);
 
-  const newTpl = { id: uuid(), cardId: cardId, day: day|0, amount: +amount, memo: memo, est: est };
-  templates.push(newTpl);
-  save(KEYS_TPL.LIST, templates);
+  /* storage keys */
+  const KEYS = { CARDS:'cb_cards_local_v1', ENTRIES:'cb_entries_local_v1' };
+  const KEYS_TPL = { LIST:'cb_templates_v1' };
+  const KEY_PAYDAY = 'cb_payday_base_v1';
+  const KEY_ADJ_WK = 'cb_adjust_weekends_v1';
+  const KEY_HOLIDAYS = 'cb_holidays_v1';
+  const KEY_HOLIDAYS_LAST = 'cb_holidays_last_updated';
+  const KEY_HOLIDAYS_USER = 'cb_holidays_user_extra_v1';
 
-  tplDayEl.value = ''; tplAmountEl.value = ''; tplMemoEl.value = ''; tplEstEl.checked = false;
-  renderTplList();
+  const load=(k,fb)=>{ try{ return JSON.parse(localStorage.getItem(k)) ?? fb }catch{ return fb } };
 
-  var ym = getMonthKey();
-  var addedNow = applyTemplatesForMonth(ym);
-  preapplyNeighbors(ym);
-  render();
+  let autosavePaused = false;
 
-  tplStatusEl.textContent = addedNow ? (addedNow + '件をこの月に追加しました') : 'この月への追加はありません（同一明細あり or 過去期間）';
-  setTimeout(function(){ tplStatusEl.textContent = ''; }, 1200);
-});
+  const save=(k,v)=>{
+    try{
+      localStorage.setItem(k, JSON.stringify(v));
+      if (!autosavePaused && typeof window.markDirty === 'function') window.markDirty();
+      tick('保存しました');
+    }catch(e){
+      tick('保存失敗');
+    }
+  };
+  function saveSilent(k, v){
+    try{
+      autosavePaused = true;
+      localStorage.setItem(k, JSON.stringify(v));
+    } finally {
+      autosavePaused = false;
+    }
+  }
 
-/* テンプレ削除：過去は残し、今日以降(>= today)の同tplId明細だけ削除 */
-tplListEl.addEventListener('click', (e)=>{
-  const del = e.target.closest('button[data-del-tpl]');
-  if (!del) return;
-  const id = del.dataset.delTpl;
+  /* state */
+  let cards = load(KEYS.CARDS, []);
+  let entries = load(KEYS.ENTRIES, {});
+  let templates = load(KEYS_TPL.LIST, []);
+  let editingRef = null;
+  let legacyCycle = load('cb_cycle_start_day_v1', null);
+  let paydayBase = load(KEY_PAYDAY, legacyCycle!=null ? legacyCycle : 1);
+  let adjustWeekends = load(KEY_ADJ_WK, true);
+  let holidays = load(KEY_HOLIDAYS, []);
 
-  // 1) テンプレ自体を削除
-  templates = templates.filter(t => t.id !== id);
-  save(KEYS_TPL.LIST, templates);
+  // 祝日ICSを自動取得（GitHub Pages配信はCORSでスキップ）
+  async function autoUpdateJapanHolidays() {
+    try {
+      const last = Number(localStorage.getItem(KEY_HOLIDAYS_LAST) || 0);
+      if (Date.now() - last < 7*24*60*60*1000) {
+        console.log("祝日更新スキップ（7日以内）");
+        return;
+      }
 
-  // 2) 今日以降の、そのテンプレ由来の明細だけを削除（過去は残す）
-  const today = startOfDay(now());
-  Object.keys(entries).forEach(k => {
-    const arr = entries[k] || [];
-    entries[k] = arr.filter(r => {
-      if (r.tplId !== id) return true;                     // テンプレ由来でない → 残す
-      const d = startOfDay(new Date(r.date));
-      return d < today;                                    // 今日より前は残す、今日以降は削除
+      if (location.hostname.endsWith("github.io")) {
+        console.log("祝日更新をスキップ（CORS回避）。必要なら Edge Function/JSON に切替えてください。");
+        localStorage.setItem(KEY_HOLIDAYS_LAST, String(Date.now()));
+        return;
+      }
+
+      const url = "https://calendar.google.com/calendar/ical/ja.japanese%23holiday%40group.v.calendar.google.com/public/basic.ics";
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error("祝日カレンダー取得失敗");
+      const text = await res.text();
+
+      const dates = [];
+      text.split("BEGIN:VEVENT").slice(1).forEach(block => {
+        const m = block.match(/DTSTART;?VALUE=DATE:(\d{8})/);
+        if (m) dates.push(`${m[1].slice(0,4)}-${m[1].slice(4,6)}-${m[1].slice(6,8)}`);
+      });
+      const uniq = Array.from(new Set(dates)).sort();
+
+      const prev = load(KEY_HOLIDAYS, []);
+      const changed = JSON.stringify(prev) !== JSON.stringify(uniq);
+      if (changed) {
+        holidays = uniq;
+        saveSilent(KEY_HOLIDAYS, holidays);
+        render();
+        console.log(`祝日を自動更新: ${holidays.length} 件`);
+      } else {
+        console.log("祝日は最新です（更新なし）");
+      }
+
+      localStorage.setItem(KEY_HOLIDAYS_LAST, String(Date.now()));
+    } catch (e) {
+      console.warn("祝日自動更新エラー:", e);
+    }
+  }
+
+  /* elements */
+  const monthEl=$('#month'), periodRangeEl=$('#periodRange');
+  const usedTotalEl=$('#usedTotal'), remainTotalEl=$('#remainTotal'), barTotalEl=$('#barTotal');
+  const cardsSummaryEl=$('#cardsSummary'), cardSelectEl=$('#cardSelect'), filterCardEl=$('#filterCard');
+  const dateEl=$('#date'), amountEl=$('#amount'), memoEl=$('#memo'), estimatedEl=$('#estimated');
+  const listEl=$('#list'), sumFooterEl=$('#sumFooter'), statusEl=$('#status');
+  const addBtn=$('#add'), updateBtn=$('#update'), cancelEditBtn=$('#cancelEdit'), clearFormBtn=$('#clearForm');
+  const exportCsvBtn=$('#exportCsv'), backupBtn=$('#backup'), restoreInput=$('#restore'), gotoTodayBtn=$('#gotoToday');
+
+  const manageCardsBtn=$('#manageCards'), cardModal=$('#cardModal'), closeCardModalBtn=$('#closeCardModal');
+  const cardListEl=$('#cardList'), newCardNameEl=$('#newCardName'), newCardTargetEl=$('#newCardTarget'), resetTargetsBtn=$('#resetTargets']);
+
+  const manageTemplatesBtn=$('#manageTemplates'), tplModal=$('#tplModal'), closeTplModalBtn=$('#closeTplModal');
+  const tplListEl=$('#tplList'), tplCardEl=$('#tplCard'), tplDayEl=$('#tplDay'), tplAmountEl=$('#tplAmount'), tplMemoEl=$('#tplMemo'), tplEstEl=$('#tplEst');
+  const tplStatusEl=$('#tplStatus');
+
+  const settingsModal=$('#settingsModal'), openSettingsBtn=$('#openSettings'), closeSettingsBtn=$('#closeSettings');
+  const paydayInput=$('#paydayInput'), adjWeekendsEl=$('#adjWeekends'), holidaysInput=$('#holidaysInput');
+  const saveSettingsBtn=$('#saveSettings');
+
+  /* payday counter elements */
+  const pdEtaEl = $('#pdEta'), pdBarEl = $('#pdBar'), pdRangeEl = $('#pdRange');
+  const pdBadgeBase = $('#pdBadgeBase'), pdBadgePrev = $('#pdBadgePrev'), pdBadgeThis = $('#pdBadgeThis'), pdBadgeDays = $('#pdBadgeDays'), pdBadgePct = $('#pdBadgePct');
+
+  /* helpers */
+  const tick = (m)=>{ statusEl.textContent=m; setTimeout(()=>statusEl.textContent='—',1200); };
+  const ensureDefaultCard=()=>{ if(cards.length===0){ cards=[{id:uuid(),name:'メインカード',target:0}]; save(KEYS.CARDS,cards);} };
+  const getMonthKey=()=> monthEl.value || yyyymm(now());
+  const monthEntries=(key)=> entries[key] || [];
+  const setMonthEntries=(key,arr)=>{ entries[key]=arr; save(KEYS.ENTRIES,entries); render(); };
+  const totalTarget=()=> cards.reduce((s,c)=> s+(+c.target||0),0);
+
+  /* business days and payday (templates are NOT adjusted) */
+  function holidaySet(){ const set = new Set(); (holidays||[]).forEach(d=>{ if(typeof d==='string' && d.length>=10) set.add(d.slice(0,10)); }); return set; }
+  function isHolidayDate(d, set){ return (adjustWeekends && isWeekend(d)) || set.has(ymd(d)); }
+  function adjustedPayday(y, m){
+    const base = new Date(y, m-1, clampDay(y,m,paydayBase));
+    const set = holidaySet();
+    while(isHolidayDate(base, set)){ base.setDate(base.getDate()-1); }
+    return startOfDay(base);
+  }
+
+  /* period (end month anchored by next payday) */
+  function periodOf(ym){
+    const [y,m]=ym.split('-').map(Number);
+    let py=y, pm=m-1; if(pm<1){ pm=12; py--; }
+    const start = adjustedPayday(py, pm);
+    const endExclusive = adjustedPayday(y, m);
+    const end = new Date(endExclusive.getTime()-86400000);
+    return {start, end, endExclusive};
+  }
+  function anchorForDate(d){
+    const y=d.getFullYear(), m=d.getMonth()+1;
+    const endExclusive = adjustedPayday(y, m);
+    if(startOfDay(d) >= endExclusive){
+      let nm=m+1, ny=y; if(nm>12){ nm=1; ny++; }
+      return `${ny}-${pad2(nm)}`;
+    }
+    return `${y}-${pad2(m)}`;
+  }
+  function updatePeriodLabel(){
+    const {start, end} = periodOf(getMonthKey());
+    const p2=n=>String(n).padStart(2,'0');
+    const f=d=>`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;
+    periodRangeEl.textContent = `期間: ${f(start)} 〜 ${f(end)}（ベース給料日: ${paydayBase}日／給料日は休業日なら前営業日に調整。定例は移動しません）`;
+  }
+
+  /* entries in period */
+  function entriesForPeriod(ym){
+    const {start, end} = periodOf(ym);
+    const keys = new Set([ yyyymm(start), yyyymm(end) ]);
+    let rows = [];
+    keys.forEach(k=>{
+      (entries[k]||[]).forEach((r,idx)=>{
+        const d=new Date(r.date);
+        if(d>=start && d<=end) rows.push({...r, srcKey:k, srcIdx:idx});
+      });
     });
+    rows.sort((a,b)=> (a.date||'').localeCompare(b.date||'') || (a.memo||'').localeCompare(b.memo||'')); 
+    return rows;
+  }
+  const sumByCardInPeriod=(ym,id)=> entriesForPeriod(ym).filter(r=>r.cardId===id).reduce((s,r)=>s+(+r.amount||0),0);
+  const sumAllInPeriod=(ym)=> entriesForPeriod(ym).reduce((s,r)=>s+(+r.amount||0),0);
+
+  /* templates (NO weekday adjustment) */
+  function renderTplSelectorsFromCards(){ tplCardEl.innerHTML=''; cards.forEach(c=>{ const o=document.createElement('option'); o.value=c.id; o.textContent=c.name; tplCardEl.appendChild(o); }); }
+  function renderTplList(){
+    tplListEl.innerHTML=''; templates.forEach(t=>{
+      const c = cards.find(x=>x.id===t.cardId);
+      const li=document.createElement('li');
+      li.style.cssText='padding:8px 0; border-top:1px solid #eef2ff; display:flex; gap:8px; align-items:center; flex-wrap:wrap;';
+      li.innerHTML = `<div class="sub">[${c?c.name:'—'}] 毎月${t.day}日 / ${fmtJPY(t.amount)} / ${t.memo||''} ${t.est?'<span class="chip">概算</span>':''}</div>
+                      <button data-del-tpl="${t.id}" class="btn ghost" type="button" style="height:auto; padding:6px 10px; font-size:12px">削除</button>`;
+      tplListEl.appendChild(li);
+    });
+  }
+  function dateInPeriodForTpl(ym, day){
+    const {start, end} = periodOf(ym);
+    const ay=end.getFullYear(), am=end.getMonth()+1;
+    const candA = new Date(ay, am-1, clampDay(ay, am, day));
+    if(candA>=start && candA<=end) return candA;
+    const sy=start.getFullYear(), sm=start.getMonth()+1;
+    const candS = new Date(sy, sm-1, clampDay(sy, sm, day));
+    if(candS>=start && candS<=end) return candS;
+    return end;
+  }
+
+  /* 未来（当月を含む）だけ適用。完全に過去の期間は適用しない */
+  function applyTemplatesForMonth(ym){
+    const { start, end } = periodOf(ym);
+    const today = startOfDay(now());
+    if (end < today) return 0;
+
+    const periodRows = entriesForPeriod(ym);
+    let added = 0;
+
+    templates.forEach(t => {
+      const target = dateInPeriodForTpl(ym, t.day);
+      const dateStr = ymd(target);
+
+      const exists = periodRows.some(r =>
+        r.cardId === t.cardId &&
+        r.date   === dateStr &&
+        +r.amount === +t.amount &&
+        (r.memo || '') === (t.memo || '') &&
+        !!r.est === !!t.est
+      );
+
+      if (!exists) {
+        const key = dateStr.slice(0,7);
+        const arr = monthEntries(key).slice();
+        arr.push({ cardId:t.cardId, tplId:t.id, date:dateStr, amount:+t.amount, memo:t.memo||'', est:!!t.est });
+        entries[key] = arr;
+        added++;
+      }
+    });
+
+    if (added > 0) { save(KEYS.ENTRIES, entries); render(); }
+    return added;
+  }
+
+  /* 先読み（前月・当月・翌月） */
+  function ymAdd(ym, delta){ const d = new Date(ym + '-01'); d.setMonth(d.getMonth() + delta); return yyyymm(d); }
+  function preapplyNeighbors(ym){ [ymAdd(ym,-1), ym, ymAdd(ym,1)].forEach(k => applyTemplatesForMonth(k)); }
+
+  /* payday counter */
+  function currentPayPeriodForCounter(today=now()){
+    const y=today.getFullYear(), m=today.getMonth()+1;
+    const thisPay = adjustedPayday(y, m);
+    if(startOfDay(today) >= startOfDay(thisPay)){
+      const nm = m===12?1:m+1, ny = m===12?y+1:y;
+      return { prevPay: thisPay, thisPay: adjustedPayday(ny, nm) };
+    }else{
+      const pm = m===1?12:m-1, py = m===1?y-1:y;
+      return { prevPay: adjustedPayday(py, pm), thisPay };
+    }
+  }
+  function renderPaydayCounter(){
+    const { prevPay, thisPay } = currentPayPeriodForCounter(now());
+    const totalDays = Math.max(1, daysBetween(prevPay, thisPay));
+    const elapsed = Math.max(0, Math.min(totalDays, daysBetween(prevPay, now())));
+    const remaining = Math.max(0, totalDays - elapsed);
+    const pct = Math.round((elapsed/totalDays)*100);
+    const isToday = ymd(now()) === ymd(thisPay);
+
+    pdEtaEl.textContent = isToday ? '本日が給料日です！' : 'あと ' + remaining + ' 日';
+    pdEtaEl.classList.toggle('ok', isToday);
+    pdBarEl.style.width = pct + '%';
+    pdBarEl.style.background = remaining<=3 ? (remaining===0?'var(--ok)':'var(--warn2)') : 'var(--accent)';
+
+    const f = d => d.getFullYear() + '/' + (d.getMonth()+1) + '/' + d.getDate();
+    pdRangeEl.textContent = '期間：' + f(prevPay) + ' 〜 ' + f(thisPay) + '（全' + totalDays + '日・進捗' + pct + '%）';
+
+    pdBadgeBase.textContent = 'ベース: ' + paydayBase + '日';
+    pdBadgePrev.textContent = '前回: ' + f(prevPay);
+    pdBadgeThis.textContent = '今回: ' + f(thisPay);
+    pdBadgeDays.textContent = '全: ' + totalDays + '日';
+    pdBadgePct.textContent = '進捗: ' + pct + '%';
+  }
+
+  /* render */
+  function renderCardsSummary(){
+    const ym = getMonthKey(); cardsSummaryEl.innerHTML='';
+    cards.forEach(c=>{
+      const used = sumByCardInPeriod(ym, c.id);
+      const tgt = +c.target||0;
+      const remain = Math.max(tgt-used,0);
+      const pct = tgt>0 ? Math.min(Math.round(used/tgt*100),100) : 0;
+      const d=document.createElement('div'); d.className='card';
+      d.innerHTML=`
+        <div class="row" style="align-items:center">
+          <div style="font-weight:600">${c.name}</div>
+          <span class="sub" style="margin-left:auto">目標: <b>${fmtJPY(tgt)}</b> / 使用: <b>${fmtJPY(used)}</b> / 残り: <b>${tgt?fmtJPY(remain):'目標未設定'}</b></span>
+          <button data-edit-card="${c.id}" class="btn ghost" type="button" style="height:auto; padding:6px 10px; font-size:12px">編集</button>
+          <button data-del-card="${c.id}" class="btn ghost" type="button" style="height:auto; padding:6px 10px; font-size:12px">削除</button>
+        </div>
+        <div class="bar" style="margin-top:8px"><div style="width:${pct}%; background:${used>tgt?'var(--warn)':'var(--accent)'}"></div></div>`;
+      cardsSummaryEl.appendChild(d);
+    });
+  }
+  function renderTopSummary(){
+    const ym = getMonthKey();
+    const used = sumAllInPeriod(ym);
+    const tgt = totalTarget();
+    usedTotalEl.textContent = fmtJPY(used);
+    sumFooterEl.textContent = fmtJPY(used);
+    if(tgt>0){
+      const remain = Math.max(tgt-used,0);
+      remainTotalEl.textContent = fmtJPY(remain);
+      const pct = Math.min(Math.round(used/tgt*100),100);
+      barTotalEl.style.width = pct+'%';
+      barTotalEl.style.background = (used>tgt?'var(--warn)':'var(--accent)');
+    }else{
+      remainTotalEl.textContent = '目標未設定';
+      barTotalEl.style.width='0%'; barTotalEl.style.background='var(--accent)';
+    }
+    updatePeriodLabel();
+  }
+  function renderCardSelectors(){
+    cardSelectEl.innerHTML=''; cards.forEach(c=>{ const o=document.createElement('option'); o.value=c.id; o.textContent=c.name; cardSelectEl.appendChild(o); });
+    const cur=filterCardEl.value; filterCardEl.innerHTML='<option value="">（すべてのカード）</option>';
+    cards.forEach(c=>{ const o=document.createElement('option'); o.value=c.id; o.textContent=c.name; filterCardEl.appendChild(o); });
+    if(cur && cards.some(c=>c.id===cur)) filterCardEl.value=cur;
+  }
+  function renderList(){
+    const ym = getMonthKey();
+    const filter = filterCardEl.value;
+    const rows = entriesForPeriod(ym).filter(r=>!filter || r.cardId===filter);
+    listEl.innerHTML='';
+    rows.forEach(r=>{
+      const card=cards.find(c=>c.id===r.cardId); const badge=r.est?'<span class="chip">概算</span>':'';
+      const li=document.createElement('li');
+      li.innerHTML=`<div class="date">${r.date||''}</div>
+        <div class="amt">${fmtJPY(r.amount||0)} ${badge}</div>
+        <div style="font-size:12px; color:var(--muted); flex:1">カード: ${card?card.name:'—'} ／ ${r.memo||''}</div>
+        <div style="display:flex; gap:6px">
+          <button data-edit='${r.srcKey}:${r.srcIdx}' class="btn ghost" type="button" style="height:auto; padding:6px 10px; font-size:12px">編集</button>
+          <button data-del='${r.srcKey}:${r.srcIdx}' class="btn ghost" type="button" style="height:auto; padding:6px 10px; font-size:12px">削除</button>
+        </div>`;
+      listEl.appendChild(li);
+    });
+  }
+  function render(){
+    ensureDefaultCard();
+    renderTopSummary(); renderCardsSummary(); renderCardSelectors(); renderList();
+    renderPaydayCounter();
+    addBtn.classList.remove('hidden'); updateBtn.classList.add('hidden'); cancelEditBtn.classList.add('hidden');
+  }
+
+  /* init */
+  (function init(){
+    if(legacyCycle!=null){ try{ localStorage.removeItem('cb_cycle_start_day_v1'); }catch{} }
+    monthEl.value = anchorForDate(now());
+    dateEl.value = todayStr();
+    ensureDefaultCard();
+    applyTemplatesForMonth(getMonthKey());
+    render();
+    preapplyNeighbors(getMonthKey());
+    setInterval(()=> renderPaydayCounter(), 3600*1000);
+
+    // 起動時：祝日自動更新 → ユーザー追加分と合体 → 反映
+    autoUpdateJapanHolidays().finally(()=>{
+      const ics = load(KEY_HOLIDAYS, []);
+      const userExtra = load(KEY_HOLIDAYS_USER, []);
+      holidays = Array.from(new Set([...ics, ...userExtra])).sort();
+      saveSilent(KEY_HOLIDAYS, holidays);
+      render();
+    });
+  })();
+
+  /* events: month nav */
+  monthEl.addEventListener('change', ()=>{
+    editingRef=null;
+    applyTemplatesForMonth(getMonthKey());
+    preapplyNeighbors(getMonthKey());
+    render();
   });
-  save(KEYS.ENTRIES, entries);
+  filterCardEl.addEventListener('change', ()=> render());
+  $('#prevMonth').addEventListener('click', ()=>{
+    const d = new Date((getMonthKey()) + "-01"); d.setMonth(d.getMonth()-1);
+    monthEl.value = yyyymm(d);
+    applyTemplatesForMonth(getMonthKey());
+    preapplyNeighbors(getMonthKey());
+    render();
+  });
+  $('#nextMonth').addEventListener('click', ()=>{
+    const d = new Date((getMonthKey()) + "-01"); d.setMonth(d.getMonth()+1);
+    monthEl.value = yyyymm(d);
+    applyTemplatesForMonth(getMonthKey());
+    preapplyNeighbors(getMonthKey());
+    render();
+  });
+  gotoTodayBtn.addEventListener('click', ()=>{
+    monthEl.value=anchorForDate(now());
+    applyTemplatesForMonth(getMonthKey());
+    preapplyNeighbors(getMonthKey());
+    render();
+  });
 
-  renderTplList();
-  render();
-  tick('テンプレを削除。過去の明細は残し、今日以降を削除しました');
-});
+  /* cards summary edit/delete */
+  cardsSummaryEl.addEventListener('click', function(e) {
+    var editBtn = e.target.closest('button[data-edit-card]');
+    var delBtn  = e.target.closest('button[data-del-card]');
 
-/* settings modal */
-openSettingsBtn.addEventListener('click', ()=>{
-  paydayInput.value = paydayBase;
-  adjWeekendsEl.checked = !!adjustWeekends;
-  holidaysInput.value = (load(KEY_HOLIDAYS_USER, []) || []).join(', ');
-  // ▼追加：設定オープン時に現状のmock日を表示
+    if (editBtn) {
+      var id = editBtn.dataset.editCard;
+      renderCardModal();
+      cardModal.classList.add('show');
+      setTimeout(function(){
+        var nameInput = cardListEl.querySelector('input[data-card-name="' + id + '"]');
+        if (nameInput) { nameInput.focus(); nameInput.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+      }, 0);
+      return;
+    }
+
+    if (delBtn) {
+      var id2 = delBtn.dataset.delCard;
+      var card = cards.find(function(c){ return c.id === id2; });
+      if (!card) return;
+      if (!confirm('カード「' + card.name + '」を削除しますか？\n※明細は残ります（カードのみ削除）')) return;
+
+      cards = cards.filter(function(c){ return c.id !== id2; });
+      save(KEYS.CARDS, cards);
+
+      if (!cards.some(function(c){ return c.id === (cardSelectEl.value || ''); })) {
+        if (cards[0]) cardSelectEl.value = cards[0].id;
+      }
+      render();
+      tick('カードを削除しました');
+    }
+  });
+
+  /* add entry */
+  addBtn.addEventListener('click', ()=>{
+    const cardId = cardSelectEl.value || (cards[0]&&cards[0].id);
+    let d = dateEl.value || todayStr();
+    const a = toNumber((amountEl.value||'').trim());
+    const me = (memoEl.value||'').trim();
+    const est = !!estimatedEl.checked;
+    if(!cardId){ tick('カードがありません'); return; }
+    if(!Number.isFinite(a) || a<=0){ tick('金額を数値で'); return; }
+    const key = d.slice(0,7);
+    const rows = monthEntries(key).slice();
+    rows.push({ cardId, date:d, amount:a, memo:me, est });
+    setMonthEntries(key, rows);
+    amountEl.value=''; memoEl.value=''; estimatedEl.checked=false;
+  });
+
+  /* list edit/delete */
+  listEl.addEventListener('click', (e)=>{
+    const editBtn=e.target.closest('button[data-edit]'); const delBtn=e.target.closest('button[data-del]');
+    if(editBtn){
+      const [srcKey, srcIdx] = editBtn.dataset.edit.split(':');
+      const rows = monthEntries(srcKey);
+      const r = rows[+srcIdx]; if(!r) return;
+      editingRef = {srcKey, srcIdx:+srcIdx};
+      cardSelectEl.value = r.cardId;
+      dateEl.value = r.date || todayStr();
+      amountEl.value = r.amount || '';
+      memoEl.value = r.memo || '';
+      estimatedEl.checked = !!r.est;
+      addBtn.classList.add('hidden'); updateBtn.classList.remove('hidden'); cancelEditBtn.classList.remove('hidden');
+      return;
+    }
+    if(delBtn){
+      const [srcKey, srcIdx] = delBtn.dataset.del.split(':');
+      const rows = monthEntries(srcKey).slice();
+      rows.splice(+srcIdx,1);
+      setMonthEntries(srcKey, rows);
+    }
+  });
+  updateBtn.addEventListener('click', ()=>{
+    if(!editingRef) return;
+    const oldKey = editingRef.srcKey, oldIdx = editingRef.srcIdx;
+    const rowsOld = monthEntries(oldKey).slice();
+    if(!rowsOld[oldIdx]) return;
+
+    const cardId = cardSelectEl.value || (cards[0]&&cards[0].id);
+    let d = dateEl.value || todayStr();
+    const a = toNumber((amountEl.value||'').trim());
+    const me = (memoEl.value||'').trim();
+    const est = !!estimatedEl.checked;
+    if(!Number.isFinite(a) || a<=0){ tick('金額を数値で'); return; }
+
+    const newRow = { cardId, date:d, amount:a, memo:me, est };
+    const newKey = d.slice(0,7);
+    if(newKey === oldKey){
+      rowsOld[oldIdx] = newRow; setMonthEntries(oldKey, rowsOld);
+    }else{
+      rowsOld.splice(oldIdx,1); setMonthEntries(oldKey, rowsOld);
+      const rowsNew = monthEntries(newKey).slice(); rowsNew.push(newRow); setMonthEntries(newKey, rowsNew);
+    }
+    editingRef=null; amountEl.value=''; memoEl.value=''; estimatedEl.checked=false;
+    addBtn.classList.remove('hidden'); updateBtn.classList.add('hidden'); cancelEditBtn.classList.add('hidden');
+  });
+  cancelEditBtn.addEventListener('click', ()=>{ editingRef=null; amountEl.value=''; memoEl.value=''; estimatedEl.checked=false; dateEl.value=todayStr(); addBtn.classList.remove('hidden'); updateBtn.classList.add('hidden'); cancelEditBtn.classList.add('hidden'); });
+  clearFormBtn.addEventListener('click', ()=>{ amountEl.value=''; memoEl.value=''; estimatedEl.checked=false; if(!dateEl.value) dateEl.value=todayStr(); });
+
+  /* csv/backup/restore */
+  exportCsvBtn.addEventListener('click', ()=>{
+    const ym = getMonthKey();
+    const rows = entriesForPeriod(ym);
+    const csv = ['date,card,amount,memo,estimated'].concat(rows.map(r=>{
+      const c=cards.find(x=>x.id===r.cardId); const memo=(r.memo||'').replaceAll('"','""');
+      return `${r.date},"${c?c.name:''}",${r.amount},"${memo}",${r.est?1:0}`;
+    })).join('\n');
+    const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`${ym}-payday${paydayBase}.csv`; a.click(); URL.revokeObjectURL(a.href);
+  });
+  backupBtn.addEventListener('click', ()=>{
+    const data={
+      cards, entries, templates,
+      paydayBase, adjustWeekends,
+      holidays,
+      holidaysUser: load(KEY_HOLIDAYS_USER, [])
+    };
+    const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`cardBudget-backup-${Date.now()}.json`; a.click(); URL.revokeObjectURL(a.href);
+  });
+  restoreInput.addEventListener('change', (e)=>{
+    const f=e.target.files?.[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=()=>{ try{
+      const o=JSON.parse(r.result);
+      if(o && typeof o==='object'){
+        if(Array.isArray(o.cards)) cards=o.cards;
+        if(o.entries && typeof o.entries==='object') entries=o.entries;
+        if(Array.isArray(o.templates)) templates=o.templates;
+        if(typeof o.paydayBase==='number') paydayBase = Math.min(Math.max(1, o.paydayBase|0), 31);
+        if(typeof o.adjustWeekends==='boolean') adjustWeekends = o.adjustWeekends;
+
+        let holidaysUser = load(KEY_HOLIDAYS_USER, []);
+        if(Array.isArray(o.holidays)) holidays = o.holidays.filter(s=>typeof s==='string');
+        if(Array.isArray(o.holidaysUser)) holidaysUser = o.holidaysUser.filter(s=>typeof s==='string');
+
+        save(KEYS.CARDS,cards); save(KEYS.ENTRIES,entries); save(KEYS_TPL.LIST,templates);
+        save(KEY_PAYDAY, paydayBase); save(KEY_ADJ_WK, adjustWeekends);
+        saveSilent(KEY_HOLIDAYS_USER, holidaysUser);
+
+        holidays = Array.from(new Set([...(holidays||[]), ...holidaysUser])).sort();
+        save(KEY_HOLIDAYS, holidays);
+
+        render();
+      }
+    }catch{ tick('復元に失敗'); } };
+    r.readAsText(f);
+  });
+
+  /* card modal */
+  function renderCardModal(){
+    cardListEl.innerHTML=''; const ym=getMonthKey();
+    cards.forEach(c=>{
+      const li=document.createElement('li'); li.style.cssText='padding:8px 0; display:flex; gap:8px; align-items:center;';
+      li.innerHTML=`<input data-card-name="${c.id}" style="flex:1 1 auto; padding:8px 10px; border:1px solid var(--border); border-radius:10px" value="${c.name}">
+        <input data-card-target="${c.id}" style="width:140px; padding:8px 10px; border:1px solid var(--border); border-radius:10px" value="${c.target}" inputmode="numeric">
+        <span class="sub">使用: ${fmtJPY(sumByCardInPeriod(ym,c.id))}</span>`;
+      cardListEl.appendChild(li);
+    });
+  }
+  manageCardsBtn.addEventListener('click', ()=>{ renderCardModal(); cardModal.classList.add('show'); });
+  closeCardModalBtn.addEventListener('click', ()=> cardModal.classList.remove('show'));
+  cardModal.addEventListener('click', (e)=>{ if(e.target===cardModal) cardModal.classList.remove('show'); });
+  cardListEl.addEventListener('input', (e)=>{
+    const nameEl=e.target.closest('input[data-card-name]'); const tgtEl=e.target.closest('input[data-card-target]');
+    if(nameEl){ const id=nameEl.dataset.cardName; const c=cards.find(x=>x.id===id); if(!c) return; c.name=nameEl.value; save(KEYS.CARDS,cards); renderCardSelectors(); renderCardsSummary(); renderList(); }
+    else if(tgtEl){ const id=tgtEl.dataset.cardTarget; const c=cards.find(x=>x.id===id); if(!c) return; c.target=toNumber(tgtEl.value); save(KEYS.CARDS,cards); renderTopSummary(); renderCardsSummary(); }
+  });
+
+  /* add card */
+  $('#addCard').addEventListener('click', function () {
+    const name = (newCardNameEl.value || '').trim();
+    const tgt  = toNumber(newCardTargetEl.value || '');
+    if (!name) { tick('カード名を入れてください'); return; }
+    if (!Number.isFinite(tgt) || tgt < 0) { tick('目標額は0以上の数値で'); return; }
+
+    const id = uuid();
+    cards.push({ id, name, target: +tgt });
+    save(KEYS.CARDS, cards);
+
+    newCardNameEl.value = '';
+    newCardTargetEl.value = '';
+
+    renderCardModal();
+    renderCardSelectors();
+    renderCardsSummary();
+    renderList();
+    try { cardSelectEl.value = id; } catch(_) {}
+    renderTplSelectorsFromCards();
+
+    tick('カードを追加しました');
+  });
+
+  /* template modal events */
+  manageTemplatesBtn.addEventListener('click', ()=>{ renderTplSelectorsFromCards(); renderTplList(); tplModal.classList.add('show'); });
+  closeTplModalBtn.addEventListener('click', ()=> tplModal.classList.remove('show'));
+  tplModal.addEventListener('click', (e)=>{ if(e.target===tplModal) tplModal.classList.remove('show'); });
+
+  /* add template & apply + preapply neighbors（未来のみ） */
+  $('#addTpl').addEventListener('click', function(){
+    var cardId = tplCardEl.value;
+    var day = toNumber(tplDayEl.value || '');
+    var amount = toNumber(tplAmountEl.value || '');
+    var memo = (tplMemoEl.value || '').trim();
+    var est = !!tplEstEl.checked;
+
+    if (!cardId) { tplStatusEl.textContent = 'カード未選択'; return; }
+    if (!Number.isFinite(day) || day < 1 || day > 31) { tplStatusEl.textContent = '日付は1-31で'; return; }
+    if (!Number.isFinite(amount) || amount <= 0) { tplStatusEl.textContent = '金額を数値で'; return; }
+
+    const newTpl = { id: uuid(), cardId: cardId, day: day|0, amount: +amount, memo: memo, est: est };
+    templates.push(newTpl);
+    save(KEYS_TPL.LIST, templates);
+
+    tplDayEl.value = ''; tplAmountEl.value = ''; tplMemoEl.value = ''; tplEstEl.checked = false;
+    renderTplList();
+
+    var ym = getMonthKey();
+    var addedNow = applyTemplatesForMonth(ym);
+    preapplyNeighbors(ym);
+    render();
+
+    tplStatusEl.textContent = addedNow ? (addedNow + '件をこの月に追加しました') : 'この月への追加はありません（同一明細あり or 過去期間）';
+    setTimeout(function(){ tplStatusEl.textContent = ''; }, 1200);
+  });
+
+  /* テンプレ削除：過去は残し、今日以降の同tplId明細だけ削除 */
+  tplListEl.addEventListener('click', (e)=>{
+    const del = e.target.closest('button[data-del-tpl]');
+    if (!del) return;
+    const id = del.dataset.delTpl;
+
+    // 1) テンプレ自体を削除
+    templates = templates.filter(t => t.id !== id);
+    save(KEYS_TPL.LIST, templates);
+
+    // 2) 今日以降の、そのテンプレ由来の明細だけを削除
+    const today = startOfDay(now());
+    Object.keys(entries).forEach(k => {
+      const arr = entries[k] || [];
+      entries[k] = arr.filter(r => {
+        if (r.tplId !== id) return true;
+        const d = startOfDay(new Date(r.date));
+        return d < today; // 今日より前は残す
+      });
+    });
+    save(KEYS.ENTRIES, entries);
+
+    renderTplList();
+    render();
+    tick('テンプレを削除。過去の明細は残し、今日以降を削除しました');
+  });
+
+  /* settings modal */
+  openSettingsBtn.addEventListener('click', ()=>{
+    paydayInput.value = paydayBase;
+    adjWeekendsEl.checked = !!adjustWeekends;
+    holidaysInput.value = (load(KEY_HOLIDAYS_USER, []) || []).join(', ');
+    const mockTodayInput = document.getElementById('mockTodayInput');
+    if (mockTodayInput) mockTodayInput.value = readMock() || '';
+    settingsModal.classList.add('show');
+  });
+
+  // テスト日UI
   const mockTodayInput = document.getElementById('mockTodayInput');
-  if (mockTodayInput) mockTodayInput.value = readMock() || '';
-  // ▲追加ここまで
-  settingsModal.classList.add('show');
-});
+  const applyMockBtn = document.getElementById('applyMockToday');
+  const clearMockBtn = document.getElementById('clearMockToday');
+  if (applyMockBtn && clearMockBtn && mockTodayInput) {
+    applyMockBtn.onclick = ()=>{
+      const v = (mockTodayInput.value||'').trim();
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) { tick('YYYY-MM-DD で入力'); return; }
+      localStorage.setItem(MOCK_KEY, v);
+      monthEl.value = anchorForDate(now());
+      applyTemplatesForMonth(getMonthKey());
+      preapplyNeighbors(getMonthKey());
+      render();
+      tick('テスト日を設定しました: '+v);
+    };
+    clearMockBtn.onclick = ()=>{
+      localStorage.removeItem(MOCK_KEY);
+      monthEl.value = anchorForDate(now());
+      applyTemplatesForMonth(getMonthKey());
+      preapplyNeighbors(getMonthKey());
+      render();
+      tick('テスト日を解除（実時刻に戻しました）');
+    };
+  }
 
+  closeSettingsBtn.addEventListener('click', ()=> settingsModal.classList.remove('show'));
+  settingsModal.addEventListener('click', (e)=>{ if(e.target===settingsModal) settingsModal.classList.remove('show'); });
+  saveSettingsBtn.addEventListener('click', ()=>{
+    const v = toNumber(paydayInput.value||'');
+    if(!Number.isFinite(v) || v<1 || v>31){ tick('ベース給料日は1〜31で入力してください'); return; }
+    paydayBase = v|0;
+    adjustWeekends = !!adjWeekendsEl.checked;
+    const raw = (holidaysInput.value||'').split(/[\s,]+/).map(s=>s.trim()).filter(Boolean);
+    const userExtra = raw.map(s=>s.slice(0,10)).filter(s=>/^\d{4}-\d{2}-\d{2}$/.test(s));
+    saveSilent(KEY_HOLIDAYS_USER, userExtra);
 
+    const ics = load(KEY_HOLIDAYS, []);
+    holidays = Array.from(new Set([...ics, ...userExtra])).sort();
+    save(KEY_HOLIDAYS, holidays);
 
-// ▼追加：テスト日UIハンドラ
-const mockTodayInput = document.getElementById('mockTodayInput');
-const applyMockBtn = document.getElementById('applyMockToday');
-const clearMockBtn = document.getElementById('clearMockToday');
-if (applyMockBtn && clearMockBtn && mockTodayInput) {
-  applyMockBtn.onclick = ()=>{
-    const v = (mockTodayInput.value||'').trim();
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) { tick('YYYY-MM-DD で入力'); return; }
-    localStorage.setItem(MOCK_KEY, v);
-    monthEl.value = anchorForDate(now());        // ← now() を利用
+    monthEl.value = anchorForDate(now());
     applyTemplatesForMonth(getMonthKey());
     preapplyNeighbors(getMonthKey());
     render();
-    tick('テスト日を設定しました: '+v);
-  };
-  clearMockBtn.onclick = ()=>{
-    localStorage.removeItem(MOCK_KEY);
-    monthEl.value = anchorForDate(now());        // ← now() を利用
-    applyTemplatesForMonth(getMonthKey());
-    preapplyNeighbors(getMonthKey());
-    render();
-    tick('テスト日を解除（実時刻に戻しました）');
-  };
-}
-// ▲追加ここまで
+    settingsModal.classList.remove('show');
+    tick('設定を保存しました');
+  });
 
-closeSettingsBtn.addEventListener('click', ()=> settingsModal.classList.remove('show'));
-settingsModal.addEventListener('click', (e)=>{ if(e.target===settingsModal) settingsModal.classList.remove('show'); });
-saveSettingsBtn.addEventListener('click', ()=>{
-  const v = toNumber(paydayInput.value||'');
-  if(!Number.isFinite(v) || v<1 || v>31){ tick('ベース給料日は1〜31で入力してください'); return; }
-  paydayBase = v|0;
-  adjustWeekends = !!adjWeekendsEl.checked;
-  const raw = (holidaysInput.value||'').split(/[\s,]+/).map(s=>s.trim()).filter(Boolean);
-  const userExtra = raw.map(s=>s.slice(0,10)).filter(s=>/^\d{4}-\d{2}-\d{2}$/.test(s));
-  saveSilent(KEY_HOLIDAYS_USER, userExtra);
-
-  // ICS と合体して実運用値を生成
-  const ics = load(KEY_HOLIDAYS, []);
-  holidays = Array.from(new Set([...ics, ...userExtra])).sort();
-  save(KEY_HOLIDAYS, holidays);
-
-  // ▼ここも now() に変更
-  monthEl.value = anchorForDate(now());
-  applyTemplatesForMonth(getMonthKey());
-  preapplyNeighbors(getMonthKey());
-  render();
-  settingsModal.classList.remove('show');
-  tick('設定を保存しました');
-});
-
-</script>
+  </script>
 </body>
 </html>
