@@ -398,11 +398,15 @@ window.addEventListener("pagehide", flushBeforeHide);
         await refreshSyncUI();
       }
     } catch (err) {
-      console.error("login error:", err);
-      if (String(err && err.message).includes("timeout")) {
-        syncSetMsg("ログイン失敗: 応答がありません（ネットワークや拡張機能を確認）");
+      const msg = String(err?.message || err);
+      if (msg.includes("timeout")) {
+        syncSetMsg("ログイン失敗: 応答がありません（回線・拡張機能・会社のネット制限を確認）");
+      } else if (msg.includes("CORS")) {
+        syncSetMsg("ログイン失敗: ブラウザが通信をブロック（URL設定を確認）");
+      } else if (msg.includes("ERR_BLOCKED_BY_CLIENT")) {
+        syncSetMsg("ログイン失敗: 拡張機能が通信を停止（アドブロック一時停止）");
       } else {
-        syncSetMsg("ログイン失敗: " + (err?.message || err));
+        syncSetMsg("ログイン失敗: " + msg);
       }
     } finally {
       loginBusy = false;              // ← 忘れず解除
@@ -698,6 +702,13 @@ async function autoUpdateJapanHolidays() {
     if (Date.now() - last < 7*24*60*60*1000) {
       console.log("祝日更新スキップ（7日以内）");
       return;
+    }
+
+    // GitHub Pages 等の静的配信では CORS で失敗するため、いったんスキップ
+    if (location.hostname.endsWith("github.io")) {
+    console.log("祝日更新をスキップ（CORS回避）。必要なら Edge Function/JSON に切替えてください。");
+    localStorage.setItem(KEY_HOLIDAYS_LAST, String(Date.now())); // 次回まで抑止
+    return;
     }
 
     const url = "https://calendar.google.com/calendar/ical/ja.japanese%23holiday%40group.v.calendar.google.com/public/basic.ics";
