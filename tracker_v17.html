@@ -42,7 +42,102 @@
   /* 認証UIを最前面へ */
   #authArea { position: relative; z-index: 50; }
   #authArea .btn { pointer-events: auto; }
+
+  /* 追加（パスワード表示トグルの見た目調整） */
+  .pwd-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .pwd-wrap .eye.btn {
+    height: 42px;             /* 既存 .btn と高さをそろえる */
+    padding: 0 10px;
+    white-space: nowrap;
+  }
+
+
 </style>
+
+<script>
+function installEyeToggleFor(inputId) {
+  const input = document.getElementById(inputId);
+  if (!input || input.dataset.eyeInstalled) return;
+  input.dataset.eyeInstalled = '1';
+
+  // 親を相対配置に
+  const wrapper = document.createElement('span');
+  wrapper.style.position = 'relative';
+  wrapper.style.display = 'inline-block';
+  input.parentNode.insertBefore(wrapper, input);
+  wrapper.appendChild(input);
+
+  // 目ボタン
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.setAttribute('aria-label', 'パスワードの表示/非表示');
+  btn.style.position = 'absolute';
+  btn.style.right = '8px';
+  btn.style.top = '50%';
+  btn.style.transform = 'translateY(-50%)';
+  btn.style.padding = '0 6px';
+  btn.style.height = '28px';
+  btn.style.border = '1px solid var(--border)';
+  btn.style.borderRadius = '8px';
+  btn.style.background = '#fff';
+  btn.style.cursor = 'pointer';
+  btn.textContent = '👁';
+
+  btn.addEventListener('click', () => {
+    const show = input.type === 'password';
+    input.type = show ? 'text' : 'password';
+    btn.textContent = show ? '●' : '👁';
+  });
+
+  wrapper.appendChild(btn);
+}
+</script>
+
+
+<script>
+  // ボタンが無くても自動で作って後置きする版（どの端末でも動く）
+  window.installEyeToggleFor = function(id){
+    const input = document.getElementById(id);
+    if (!input) return;
+
+    // 既存ボタンを探す / なければ作る
+    let btn = document.querySelector(`button.eye[data-eye="${id}"]`);
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn ghost eye';
+      btn.dataset.eye = id;
+      btn.style.marginLeft = '8px';
+      btn.style.height = '42px';
+      btn.textContent = '👁';
+      // 入力のすぐ後ろに置く（レイアウトはお好みで）
+      input.insertAdjacentElement('afterend', btn);
+    }
+
+    const update = (show)=>{
+      input.type = show ? 'text' : 'password';
+      btn.setAttribute('aria-pressed', String(show));
+      btn.setAttribute('aria-label', show ? 'パスワードを非表示' : 'パスワードを表示');
+      btn.textContent = show ? '🙈' : '👁';
+    };
+
+    btn.addEventListener('click', ()=>{
+      const show = input.type === 'password';
+      update(show);
+      // iOS/Androidでもキーボードを維持
+      input.focus({preventScroll:true});
+    }, {passive:true});
+
+    // 初期状態は非表示（password）
+    update(false);
+  };
+</script>
+
+
 </head>
 <body>
   <main class="wrap">
@@ -132,13 +227,25 @@
     <!-- クラウド同期（ログイン） -->
     <section class="card">
       <h2 style="font-size:14px;margin:0 0 8px">クラウド同期（ログインが必要）</h2>
+      
       <div id="authArea">
         <input id="sEmail" type="email" placeholder="メール" autocomplete="username">
-        <input id="sPw" type="password" placeholder="パスワード" autocomplete="current-password">
+
+        <!-- パスワード + 目ボタン -->
+        <div class="pwd-wrap">
+          <input id="sPw" type="password" placeholder="パスワード" autocomplete="current-password">
+          <button type="button"
+                  class="btn ghost eye"
+                  data-eye="sPw"
+                  aria-pressed="false"
+                  aria-label="パスワードを表示">👁</button>
+        </div>
+
         <button id="sSignup" class="btn" type="button">新規登録</button>
         <button id="sLogin" class="btn" type="button">ログイン</button>
         <button id="sResetPw" class="btn ghost" type="button">パスワードをお忘れですか？</button>
       </div>
+
       <div id="syncArea" class="row" style="display:none">
         <div class="sub">ログイン中：<b id="sWho"></b></div>
         <button id="cloudSave" class="btn" type="button">クラウド保存</button>
@@ -235,6 +342,7 @@
 
   <!-- Supabase（UMD版） -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  
   <script>
   (async () => {
     // ライブラリ読み込み確認
@@ -411,16 +519,35 @@
       panel.id = "pwResetPanel";
       panel.className = "card";
       panel.style.marginTop = "8px";
+
       panel.innerHTML = `
         <div class="sub" style="margin-bottom:8px">新しいパスワードを入力してください</div>
         <div class="row">
-          <input id="newPw1" type="password" placeholder="新パスワード">
-          <input id="newPw2" type="password" placeholder="新パスワード（確認）">
+          <div class="pwd-wrap" style="flex:1 1 260px">
+            <input id="newPw1" type="password" placeholder="新パスワード">
+            <button type="button"
+                    class="btn ghost eye"
+                    data-eye="newPw1"
+                    aria-pressed="false"
+                    aria-label="パスワードを表示">👁</button>
+          </div>
+          <div class="pwd-wrap" style="flex:1 1 260px">
+            <input id="newPw2" type="password" placeholder="新パスワード（確認）">
+            <button type="button"
+                    class="btn ghost eye"
+                    data-eye="newPw2"
+                    aria-pressed="false"
+                    aria-label="パスワードを表示">👁</button>
+          </div>
           <button id="applyNewPw" class="btn" type="button">更新</button>
           <button id="cancelNewPw" class="btn ghost" type="button">閉じる</button>
         </div>
         <div class="sub" id="pwResetMsg" style="margin-top:6px"></div>
       `;
+
+      installEyeToggleFor('newPw1');
+      installEyeToggleFor('newPw2');
+
       const authArea = document.getElementById("authArea");
       authArea?.appendChild(panel);
 
@@ -519,6 +646,9 @@
 
     refreshSyncUI();
     sb.auth.onAuthStateChange(()=>refreshSyncUI());
+
+    installEyeToggleFor('sPw');
+  
 
     async function refreshSyncUI(){
       const { data:{ session } } = await sb.auth.getSession();
